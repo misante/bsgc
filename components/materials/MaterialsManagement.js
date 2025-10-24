@@ -114,7 +114,7 @@ export default function MaterialsManagement() {
     const approvedMaterials = plannedMaterials.filter(
       (material) => material.status === "approved"
     );
-    console.log("masterMaterials:", masterMaterials);
+    console.log("suppliers in mmp:", suppliers);
 
     // Also include materials that have approved procurement orders
     const approvedOrderMaterials = procurementOrders
@@ -259,6 +259,7 @@ export default function MaterialsManagement() {
             onCreateOrder={handleCreateProcurementWithStatus}
             onUpdateApproval={handleUpdateApprovalWithStatus}
             onReceiveOrder={handleReceiveOrder}
+            fetchProcurementOrders={fetchProcurementOrders}
           />
         );
 
@@ -325,8 +326,8 @@ export default function MaterialsManagement() {
           <MaterialDetailDrawer
             material={selectedMaterial}
             onClose={() => setSelectedMaterial(null)}
-            onUpdate={handleUpdateMaterial}
-            onDelete={handleDeleteMaterial}
+            onUpdate={handleUpdateInventory}
+            onDelete={handleDeleteInventory}
           />
         )}
 

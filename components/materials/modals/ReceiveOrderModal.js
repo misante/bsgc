@@ -17,8 +17,14 @@ import {
   Layers,
 } from "lucide-react";
 import { createPortal } from "react-dom";
+import toast from "react-hot-toast";
 
-const ReceiveOrderModal = ({ isOpen, onClose, order, onReceiveOrder }) => {
+const ReceiveOrderModal = ({
+  isOpen,
+  onClose,
+  order,
+  fetchProcurementOrders,
+}) => {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState("receive");
   const [formData, setFormData] = useState({
@@ -47,7 +53,7 @@ const ReceiveOrderModal = ({ isOpen, onClose, order, onReceiveOrder }) => {
   useEffect(() => {
     setMounted(true);
   }, []);
-
+  console.log("order to receive:", order);
   // Reset form and fetch data when modal opens
   useEffect(() => {
     if (isOpen && order) {
@@ -80,6 +86,7 @@ const ReceiveOrderModal = ({ isOpen, onClose, order, onReceiveOrder }) => {
       supplier_name: order.supplier_name,
     });
   };
+  console.log("order recceipt form data:", formData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -104,17 +111,16 @@ const ReceiveOrderModal = ({ isOpen, onClose, order, onReceiveOrder }) => {
 
       if (result.success) {
         // Call the parent component's callback if provided
-        if (onReceiveOrder) {
-          onReceiveOrder(order.id, result.data);
-        }
+        await fetchProcurementOrders();
+        toast.success("Order receipt updated successfully", { duration: 4000 });
         onClose();
       } else {
         console.error("Error receiving order:", result.error);
-        alert("Error receiving order: " + result.error);
+        toast.error("Error receiving order: " + result.error);
       }
     } catch (error) {
       console.error("Error submitting receive order:", error);
-      alert("Error receiving order. Please try again.");
+      toast.error("Error receiving order. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -290,7 +296,7 @@ const ReceiveOrderModal = ({ isOpen, onClose, order, onReceiveOrder }) => {
                           Material:
                         </span>
                         <p className="font-medium text-green-500 capitalize">
-                          {order.master_materials?.name}
+                          {order.material_name}
                         </p>
                       </div>
                       <div>
@@ -718,481 +724,3 @@ const ReceiveForm = ({
 };
 
 export default ReceiveOrderModal;
-// // components/materials/modals/ReceiveOrderModal.js
-// import { useState, useEffect, use } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
-// import {
-//   X,
-//   Package,
-//   Calendar,
-//   MapPin,
-//   Barcode,
-//   User,
-//   DollarSign,
-//   Truck,
-//   CheckCircle,
-//   ClipboardList,
-// } from "lucide-react";
-// import { createPortal } from "react-dom";
-
-// const ReceiveOrderModal = ({ isOpen, onClose, order, onReceiveOrder }) => {
-//   const [mounted, setMounted] = useState(false);
-//   const [formData, setFormData] = useState({
-//     material_id: "",
-//     material_name: "",
-//     location: "",
-//     batch_number: "",
-//     received_date: new Date().toISOString().split("T")[0],
-//     expiry_date: "",
-//     unit_cost: "",
-//     ordered_quantity: "",
-//     received_quantity: "",
-//     total_value: "",
-//     received_by: "",
-//     received_at: "",
-//     notes: "",
-//     supplier_name: "",
-//   });
-
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-
-//   useEffect(() => {
-//     setMounted(true);
-//   }, []);
-
-//   // Reset form when modal opens with order data
-//   useEffect(() => {
-// if (isOpen && order) {
-//   setFormData({
-//     material_id: order.material_id,
-//     material_name: order.material_name,
-//     location: "",
-//     batch_number: `Batch-${order.id}-${Date.now().toString().slice(-6)}`,
-//     received_date: new Date().toISOString().split("T")[0],
-//     expiry_date: "",
-//     ordered_quantity: order.quantity,
-//     received_quantity: order.quantity,
-//     unit_cost: order.unit_cost || 0,
-//     total_value: order.unit_cost * order.quantity || 0,
-//     received_by: "Anteneh",
-//     received_at: new Date().toISOString(),
-//     notes: `Received from ${order.suppliers?.name || "supplier"} - Order #${
-//       order.id
-//     }`,
-//     supplier_name: order.supplier_name,
-//   });
-// }
-//   }, [isOpen, order]);
-
-//   // Calculate total value when unit cost or received quantity changes
-//   useEffect(() => {
-//     const unitCost = parseFloat(formData.unit_cost) || 0;
-//     const received_quantity = parseFloat(formData.received_quantity) || 0;
-//     const totalValue = unitCost * received_quantity;
-
-//     setFormData((prev) => ({
-//       ...prev,
-//       total_value: totalValue,
-//     }));
-//   }, [formData.unit_cost, formData.received_quantity]);
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     if (!order) return;
-
-//     setIsSubmitting(true);
-
-//     try {
-//       const success = await onReceiveOrder(order.id, {
-//         procurement_order_id: order.id,
-//         material_id: order.material_id,
-//         material_name: order.material_name,
-//         ordered_quantity: order.quantity,
-//         received_quantity: parseInt(formData.received_quantity), // Use actual received quantity
-//         location: formData.location,
-//         batch_number: formData.batch_number,
-//         received_date: formData.received_date,
-//         expiry_date: formData.expiry_date || null,
-//         unit_cost: parseFloat(formData.unit_cost),
-//         total_value: parseFloat(formData.total_value),
-//         supplier_name: order.supplier_name,
-//         received_by: formData.received_by,
-//         received_at: new Date().toISOString(),
-//         notes: formData.notes,
-//       });
-
-//       if (success) {
-//         onClose();
-//       }
-//     } catch (error) {
-//       console.error("Error submitting receive order:", error);
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   if (!isOpen || !order) return null;
-
-//   return (
-//     <>
-//       {mounted &&
-//         createPortal(
-//           <AnimatePresence>
-//             <motion.div
-//               initial={{ opacity: 0 }}
-//               animate={{ opacity: 1 }}
-//               exit={{ opacity: 0 }}
-//               className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
-//               onClick={onClose}
-//             >
-//               <motion.div
-//                 initial={{ scale: 0.9, opacity: 0 }}
-//                 animate={{ scale: 1, opacity: 1 }}
-//                 exit={{ scale: 0.9, opacity: 0 }}
-//                 className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col"
-//                 onClick={(e) => e.stopPropagation()}
-//               >
-//                 {/* Header - Fixed */}
-//                 <div className="flex-shrink-0">
-//                   <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-//                     <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-//                       <Truck className="w-6 h-6 text-green-600" />
-//                       Receive Order #{order.id}
-//                     </h3>
-//                     <button
-//                       onClick={onClose}
-//                       className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-//                     >
-//                       <X className="w-5 h-5" />
-//                     </button>
-//                   </div>
-
-//                   {/* Order Summary */}
-//                   <div className="p-6 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
-//                     <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-4 flex items-center gap-2">
-//                       <Package className="w-4 h-4" />
-//                       Order Summary
-//                     </h4>
-//                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-//                       <div>
-//                         <span className="text-blue-700 dark:text-blue-300">
-//                           Material:
-//                         </span>
-//                         <p className="font-medium text-green-500 capitalize">
-//                           {order.master_materials?.name}
-//                         </p>
-//                       </div>
-//                       <div>
-//                         <span className="text-blue-700 dark:text-blue-300">
-//                           Supplier:
-//                         </span>
-//                         <p className="font-medium text-green-500 capitalize">
-//                           {order.suppliers?.name}
-//                         </p>
-//                       </div>
-//                       <div>
-//                         <span className="text-blue-700 dark:text-blue-300">
-//                           Unit Cost:
-//                         </span>
-//                         <p className="font-medium text-green-500 capitalize">
-//                           ETB {order.unit_cost?.toLocaleString()}
-//                         </p>
-//                       </div>
-//                       <div>
-//                         <span className="text-blue-700 dark:text-blue-300">
-//                           Ordered Quantity:
-//                         </span>
-//                         <p className="font-medium text-green-500 capitalize">
-//                           {order.quantity} {order.master_materials?.unit}
-//                         </p>
-//                       </div>
-//                       <div>
-//                         <span className="text-blue-700 dark:text-blue-300">
-//                           Total Cost:
-//                         </span>
-//                         <p className="font-medium text-green-500 capitalize">
-//                           ETB {order.total_cost?.toLocaleString()}
-//                         </p>
-//                       </div>
-//                       <div>
-//                         <span className="text-blue-700 dark:text-blue-300">
-//                           Approved By:
-//                         </span>
-//                         <p className="font-medium text-green-500 capitalize">
-//                           {order.approved_by || "Management"}
-//                         </p>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-
-//                 {/* Scrollable Content Area */}
-//                 <div className="flex-1 overflow-y-auto">
-//                   {/* Receive Form */}
-//                   <form onSubmit={handleSubmit} className="p-6 space-y-6">
-//                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//                       {/* Location and Batch Number */}
-//   <div>
-//     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//       Storage Location *
-//     </label>
-//     <div className="relative">
-//       <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-//       <input
-//         type="text"
-//         required
-//         value={formData.location || ""}
-//         onChange={(e) =>
-//           setFormData((prev) => ({
-//             ...prev,
-//             location: e.target.value,
-//           }))
-//         }
-//         placeholder="e.g., Warehouse A, Shelf B2"
-//         className="w-full capitalize pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-//       />
-//     </div>
-//   </div>
-
-//   <div>
-//     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//       Batch Number *
-//     </label>
-//     <div className="relative">
-//       <Barcode className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-//       <input
-//         type="text"
-//         required
-//         value={formData.batch_number || ""}
-//         onChange={(e) =>
-//           setFormData((prev) => ({
-//             ...prev,
-//             batch_number: e.target.value,
-//           }))
-//         }
-//         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-//       />
-//     </div>
-//   </div>
-
-//   {/* Actual Received Quantity */}
-//   <div>
-//     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//       Actual Received Quantity *
-//     </label>
-//     <div className="relative">
-//       <ClipboardList className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-//       <input
-//         type="number"
-//         required
-//         min="0"
-//         step="0.01"
-//         value={formData.received_quantity || ""}
-//         onChange={(e) =>
-//           setFormData((prev) => ({
-//             ...prev,
-//             received_quantity: e.target.value,
-//           }))
-//         }
-//         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-//       />
-//     </div>
-//     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-//       Ordered: {order.quantity}{" "}
-//       {order.master_materials?.unit}
-//     </p>
-//   </div>
-
-//   {/* Dates */}
-//   <div>
-//     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//       Received Date *
-//     </label>
-//     <div className="relative">
-//       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-//       <input
-//         type="date"
-//         required
-//         value={formData.received_date || new Date()}
-//         onChange={(e) =>
-//           setFormData((prev) => ({
-//             ...prev,
-//             received_date: e.target.value,
-//           }))
-//         }
-//         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-//       />
-//     </div>
-//   </div>
-
-//   <div>
-//     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//       Expiry Date (Optional)
-//     </label>
-//     <div className="relative">
-//       <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-//       <input
-//         type="date"
-//         value={formData.expiry_date || ""}
-//         onChange={(e) =>
-//           setFormData((prev) => ({
-//             ...prev,
-//             expiry_date: e.target.value,
-//           }))
-//         }
-//         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-//       />
-//     </div>
-//   </div>
-
-//   {/* Costs */}
-//   <div>
-//     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//       Actual Unit Cost (ETB) *
-//     </label>
-//     <div className="relative">
-//       <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-//       <input
-//         type="number"
-//         required
-//         min="0"
-//         step="0.01"
-//         value={formData.unit_cost || 0}
-//         onChange={(e) =>
-//           setFormData((prev) => ({
-//             ...prev,
-//             unit_cost: e.target.value,
-//           }))
-//         }
-//         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-//       />
-//     </div>
-//     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-//       Original: ETB {order.unit_cost?.toLocaleString()}
-//     </p>
-//   </div>
-
-//   <div>
-//     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//       Total Value (ETB)
-//     </label>
-//     <input
-//       type="number"
-//       readOnly
-//       value={formData.total_value || 0}
-//       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white font-semibold"
-//     />
-//     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-//       Calculated: Received Qty × Unit Cost
-//     </p>
-//   </div>
-
-//   {/* Received By */}
-//   <div className="md:col-span-3">
-//     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//       Received By *
-//     </label>
-//     <div className="relative">
-//       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-//       <input
-//         type="text"
-//         required
-//         value={formData.received_by || ""}
-//         onChange={(e) =>
-//           setFormData((prev) => ({
-//             ...prev,
-//             received_by: e.target.value,
-//           }))
-//         }
-//         placeholder="Enter your name"
-//         className="w-full capitalize pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-//       />
-//     </div>
-//   </div>
-
-//   {/* Notes */}
-//   <div className="md:col-span-3">
-//     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//       Notes
-//     </label>
-//     <textarea
-//       value={formData.notes || ""}
-//       onChange={(e) =>
-//         setFormData((prev) => ({
-//           ...prev,
-//           notes: e.target.value,
-//         }))
-//       }
-//       rows="3"
-//       className="w-full capitalize px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-//       placeholder="Any additional notes about this delivery..."
-//     />
-//   </div>
-// </div>
-
-// {/* Quality Check */}
-// <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-//   <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center gap-2">
-//     <CheckCircle className="w-4 h-4" />
-//     Quality Check
-//   </h4>
-//   <div className="space-y-2 text-sm text-yellow-700 dark:text-yellow-100">
-//     <p className="dark:text-yellow-100">
-//       ✓ Verify material quantity matches order
-//     </p>
-//     <p className="dark:text-yellow-100">
-//       ✓ Check material quality and specifications
-//     </p>
-//     <p className="dark:text-yellow-100">
-//       ✓ Confirm no damages during transportation
-//     </p>
-//     <p className="dark:text-yellow-100">
-//       ✓ Ensure proper storage conditions
-//     </p>
-//   </div>
-// </div>
-
-// {/* Form Actions */}
-// <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-//   <motion.button
-//     type="button"
-//     whileHover={{ scale: 1.02 }}
-//     whileTap={{ scale: 0.98 }}
-//     onClick={onClose}
-//     disabled={isSubmitting}
-//     className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-//   >
-//     Cancel
-//   </motion.button>
-//   <motion.button
-//     type="submit"
-//     whileHover={{ scale: 1.02 }}
-//     whileTap={{ scale: 0.98 }}
-//     disabled={isSubmitting}
-//     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-//   >
-//     {isSubmitting ? (
-//       <>
-//         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-//         Processing...
-//       </>
-//     ) : (
-//       <>
-//         <CheckCircle className="w-4 h-4" />
-//         Receive Order
-//       </>
-//     )}
-//   </motion.button>
-//                     </div>
-//                   </form>
-//                 </div>
-//               </motion.div>
-//             </motion.div>
-//           </AnimatePresence>,
-//           document.body
-//         )}
-//     </>
-//   );
-// };
-
-// export default ReceiveOrderModal;

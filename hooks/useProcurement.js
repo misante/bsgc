@@ -34,7 +34,7 @@ export function useProcurement() {
           if (updateMaterialStatus && orderData.material_requirement_id) {
             await updateMaterialStatus(
               orderData.material_requirement_id,
-              "ordered"
+              "Ordered"
             );
           }
 
@@ -121,7 +121,10 @@ export function useProcurement() {
             await updateMaterialStatus(materialRequirementId, "approved");
           }
           await fetchProcurementOrders();
-          toast.success("Order Approved", { duration: 4000 });
+          toast.success(
+            `Order ${status === "approved" ? "Approved" : "Rejected"}`,
+            { duration: 4000 }
+          );
           return true;
         }
         return false;

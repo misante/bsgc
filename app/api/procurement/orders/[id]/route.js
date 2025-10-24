@@ -1,38 +1,3 @@
-// // app/api/materials/procurement/orders/[id]/route.js
-// import { NextResponse } from "next/server";
-// import { supabase } from "@/lib/supabase";
-
-// export async function PATCH(request, { params }) {
-//   try {
-//     const { id } = await params;
-// const updates = await request.json();
-// console.log("updates:", updates);
-// const { data, error } = await supabase
-// .from("procurement_orders")
-// .update({ ...updates, approved_by: "Besu", approved_at: new Date() })
-// .eq("id", id)
-// .select(
-//   `
-//   *,
-//   master_materials (name, unit, category),
-//   material-requirements (project_id, project_phase),
-//   suppliers (name, contact_person, email, phone)
-// `
-// )
-//       .single();
-
-//     if (error) throw error;
-
-//     return NextResponse.json(data);
-//   } catch (error) {
-//     console.error("Error updating procurement order:", error);
-//     return NextResponse.json(
-//       { error: "Failed to update procurement order" },
-//       { status: 500 }
-//     );
-//   }
-// }
-// app/api/procurement-orders/[id]/approve/route.js
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { EmailService } from "@/lib/emailService";
@@ -73,30 +38,30 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: updateError.message }, { status: 400 });
     }
 
-    // 2. Send email to supplier with PDF attachment
-    if (updatedOrder.suppliers?.email) {
-      try {
-        await EmailService.sendProcurementOrderEmail(
-          updatedOrder,
-          updatedOrder.suppliers.email
-        );
+    //2. Send email to supplier with PDF attachment
+    // if (updatedOrder.suppliers?.email) {
+    //   try {
+    //     await EmailService.sendProcurementOrderEmail(
+    //       updatedOrder,
+    //       updatedOrder.suppliers.email
+    //     );
 
-        // Update order to mark email as sent
-        await supabase
-          .from("procurement_orders")
-          .update({ email_sent: true })
-          .eq("id", id);
+    //     // Update order to mark email as sent
+    //     await supabase
+    //       .from("procurement_orders")
+    //       .update({ status: "Ordered", email_sent: true })
+    //       .eq("id", id);
 
-        console.log(
-          `Email sent successfully to ${updatedOrder.suppliers.email}`
-        );
-      } catch (emailError) {
-        console.error("Error sending email:", emailError);
-        // Don't fail the request if email fails, but log it
-      }
-    } else {
-      console.warn("No supplier email found for order:", id);
-    }
+    //     console.log(
+    //       `Email sent successfully to ${updatedOrder.suppliers.email}`
+    //     );
+    //   } catch (emailError) {
+    //     console.error("Error sending email:", emailError);
+    //     // Don't fail the request if email fails, but log it
+    //   }
+    // } else {
+    //   console.warn("No supplier email found for order:", id);
+    // }
 
     return NextResponse.json({
       success: true,

@@ -1,1271 +1,5 @@
-// "use client";
-// import { Fragment, useEffect, useState } from "react";
-// import {
-//   Dialog,
-//   DialogPanel,
-//   DialogTitle,
-//   Transition,
-//   TransitionChild,
-// } from "@headlessui/react";
-// import toast from "react-hot-toast";
-
-// // Simple icon fallbacks using emojis
-// const IconWrapper = ({ children, className = "" }) => (
-//   <div className={`flex items-center justify-center w-5 h-5 ${className}`}>
-//     {children}
-//   </div>
-// );
-
-// export default function ProjectDetailsModal({
-//   project,
-//   setProject,
-//   open,
-//   setOpen,
-// }) {
-//   const [selectedProject, setSelectedProject] = useState(project);
-//   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-//   const [tasks, setTasks] = useState([]);
-//   const [loadingTasks, setLoadingTasks] = useState(true);
-//   const [showTasks, setShowTasks] = useState(false);
-//   const [isEditing, setIsEditing] = useState(false);
-//   const [editedProject, setEditedProject] = useState({});
-//   const [uploading, setUploading] = useState(false);
-
-//   const handleTaskUpdate = async (newProgress) => {
-//     setProject((prev) => ({ ...prev, progress: newProgress }));
-//   };
-
-//   // Initialize edited project when modal opens or project changes
-//   useEffect(() => {
-//     if (project) {
-//       setEditedProject(project);
-//     }
-//   }, [project]);
-
-//   const formatDate = (dateString) => {
-//     if (!dateString) return "Not specified";
-//     try {
-//       return new Date(dateString).toLocaleDateString("en-US", {
-//         year: "numeric",
-//         month: "long",
-//         day: "numeric",
-//       });
-//     } catch {
-//       return "Invalid date";
-//     }
-//   };
-
-//   const formatBudget = (budget) => {
-//     if (!budget) return "Not specified";
-//     if (typeof budget === "string" && budget.includes("ETB")) return budget;
-
-//     const numericBudget =
-//       typeof budget === "string" ? parseFloat(budget) : budget;
-//     if (!isNaN(numericBudget)) {
-//       return `ETB ${numericBudget.toLocaleString()}`;
-//     }
-
-//     return `ETB ${budget}`;
-//   };
-
-//   const getPriorityColor = (priority) => {
-//     const colors = {
-//       Low: "bg-green-100 text-green-800",
-//       Medium: "bg-yellow-100 text-yellow-800",
-//       High: "bg-red-100 text-red-800",
-//     };
-//     return colors[priority] || "bg-gray-100 text-gray-800";
-//   };
-
-//   // Fetch tasks from backend API
-//   const fetchTasks = async () => {
-//     setLoadingTasks(true);
-//     try {
-//       const res = await fetch(`/api/tasks`);
-//       const tasksData = await res.json();
-//       const projectTasks = tasksData.data.filter(
-//         (d) => d.project_id === selectedProject.id
-//       );
-//       setTasks(projectTasks);
-//       updateProgress(projectTasks);
-//     } catch (error) {
-//       console.error("Error fetching tasks:", error);
-//     }
-//     setLoadingTasks(false);
-//   };
-
-//   useEffect(() => {
-//     if (open) {
-//       fetchTasks();
-//       setShowTasks(false); // Reset tasks visibility when modal opens
-//       setIsEditing(false); // Reset edit mode when modal opens
-//     }
-//   }, [open]);
-
-//   // Update project progress based on tasks
-//   const updateProgress = (tasks) => {
-//     if (!tasks || tasks.length === 0) {
-//       setProject((prev) => ({ ...prev, progress: 0 }));
-//       return;
-//     }
-//     const completedTasks = tasks.filter((t) => t.status === "Completed").length;
-//     const progress = Math.round((completedTasks / tasks.length) * 100);
-//     setProject((prev) => ({ ...prev, progress }));
-//   };
-
-//   // Toggle task status via backend API
-//   const toggleTaskStatus = async (task) => {
-//     try {
-//       const newStatus = task.status === "completed" ? "pending" : "completed";
-//       const res = await fetch("/api/tasks/update-status", {
-//         method: "PUT",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ taskId: task.id, status: newStatus }),
-//       });
-//       const updatedTask = await res.json();
-//       const updatedTasks = tasks.map((t) =>
-//         t.id === task.id ? updatedTask : t
-//       );
-//       setTasks(updatedTasks);
-//       updateProgress(updatedTasks);
-//     } catch (error) {
-//       console.error("Error updating task:", error);
-//     }
-//   };
-
-//   const getStatusColor = (status) => {
-//     const colors = {
-//       Planning: "bg-yellow-100 text-yellow-800",
-//       "In Progress": "bg-blue-100 text-blue-800",
-//       "On Hold": "bg-orange-100 text-orange-800",
-//       Completed: "bg-green-100 text-green-800",
-//       Cancelled: "bg-red-100 text-red-800",
-//     };
-//     return colors[status] || "bg-gray-100 text-gray-800";
-//   };
-
-//   // Helper function to parse images from text/JSON string to array
-//   const parseImages = (images) => {
-//     if (!images) return [];
-//     if (Array.isArray(images)) return images;
-//     if (typeof images === "string") {
-//       try {
-//         const parsed = JSON.parse(images);
-//         return Array.isArray(parsed) ? parsed : [];
-//       } catch {
-//         return [];
-//       }
-//     }
-//     return [];
-//   };
-
-//   const getImagesArray = () => {
-//     // Use editedProject images when in edit mode, otherwise use project images
-//     const source = isEditing ? editedProject : project;
-//     return parseImages(source.images);
-//   };
-
-//   // Enhanced image upload with immediate preview
-//   const handleImageUpload = async (e) => {
-//     const files = Array.from(e.target.files);
-//     if (files.length === 0) return;
-
-//     setUploading(true);
-//     const uploadToast = toast.loading(`Uploading ${files.length} image(s)...`);
-
-//     try {
-//       const newPreviews = [];
-//       const uploadPromises = files.map(async (file) => {
-//         // Create local preview
-//         const previewUrl = URL.createObjectURL(file);
-//         newPreviews.push(previewUrl);
-
-//         // Upload to Supabase via API
-//         const formData = new FormData();
-//         formData.append("file", file);
-//         formData.append("projectId", selectedProject.id); // Always use existing project ID
-
-//         const response = await fetch("/api/upload", {
-//           method: "POST",
-//           body: formData,
-//         });
-
-//         if (!response.ok) {
-//           const errorData = await response.json();
-//           throw new Error(errorData.error || `Upload failed for ${file.name}`);
-//         }
-
-//         const data = await response.json();
-//         return data.secure_url;
-//       });
-
-//       // Update previews immediately for better UX
-//       const currentImages = getImagesArray();
-//       setEditedProject((prev) => ({
-//         ...prev,
-//         images: [...currentImages, ...newPreviews],
-//       }));
-//       setProject((prev) => ({
-//         ...prev,
-//         images: [...currentImages, ...newPreviews],
-//       }));
-
-//       // Wait for all uploads to complete
-//       const uploadedUrls = await Promise.all(uploadPromises);
-
-//       // Update with actual URLs
-//       const newImages = [...currentImages, ...uploadedUrls];
-//       setEditedProject((prev) => ({
-//         ...prev,
-//         images: newImages,
-//       }));
-//       setProject((prev) => ({
-//         ...prev,
-//         images: newImages,
-//       }));
-
-//       // Update database in background
-//       await updateProjectImages(newImages);
-
-//       // Clean up previews
-//       newPreviews.forEach(URL.revokeObjectURL);
-
-//       toast.success(`Successfully uploaded ${uploadedUrls.length} image(s)!`, {
-//         id: uploadToast,
-//       });
-//     } catch (error) {
-//       console.error("Error uploading images:", error);
-//       toast.error(`Upload failed: ${error.message}`, {
-//         id: uploadToast,
-//         duration: 5000,
-//       });
-//     } finally {
-//       setUploading(false);
-//     }
-//   };
-
-//   // Enhanced image removal using backend API
-//   const removeImage = async (index) => {
-//     const currentImages = getImagesArray();
-//     const imageToRemove = currentImages[index];
-
-//     const removeToast = toast.loading("Removing image...");
-
-//     try {
-//       // If it's a real uploaded image, delete from storage
-//       if (imageToRemove && imageToRemove.includes("supabase.co")) {
-//         const url = new URL(imageToRemove);
-//         const pathParts = url.pathname.split("/");
-//         const filePath = pathParts.slice(5).join("/");
-
-//         if (filePath) {
-//           const response = await fetch("/api/upload/delete", {
-//             method: "POST",
-//             headers: {
-//               "Content-Type": "application/json",
-//             },
-//             body: JSON.stringify({ filePath }),
-//           });
-
-//           if (!response.ok) {
-//             console.error("Failed to delete image from storage");
-//           }
-//         }
-//       }
-
-//       // Update local state
-//       const newImages = currentImages.filter((_, i) => i !== index);
-//       setEditedProject((prev) => ({
-//         ...prev,
-//         images: newImages,
-//       }));
-//       setProject((prev) => ({
-//         ...prev,
-//         images: newImages,
-//       }));
-
-//       // Update database in background
-//       await updateProjectImages(newImages);
-
-//       // Adjust selected index if needed
-//       if (selectedImageIndex >= newImages.length) {
-//         setSelectedImageIndex(Math.max(0, newImages.length - 1));
-//       }
-
-//       // Clean up blob URL if applicable
-//       if (imageToRemove.startsWith("blob:")) {
-//         URL.revokeObjectURL(imageToRemove);
-//       }
-
-//       toast.success("Image removed successfully!", {
-//         id: removeToast,
-//       });
-//     } catch (error) {
-//       console.error("Error removing image:", error);
-//       toast.error("Failed to remove image. Please try again.", {
-//         id: removeToast,
-//       });
-//     }
-//   };
-
-//   // Helper function to update project images in database
-//   const updateProjectImages = async (imagesArray) => {
-//     try {
-//       const res = await fetch(`/api/projects?id=${selectedProject.id}`, {
-//         method: "PUT",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ images: imagesArray }),
-//       });
-
-//       if (!res.ok) {
-//         console.error("Failed to update project images");
-//       }
-//     } catch (error) {
-//       console.error("Error updating project images:", error);
-//     }
-//   };
-
-//   // Handle edit functionality
-//   const handleEdit = () => {
-//     setIsEditing(true);
-//   };
-
-//   const handleSave = async () => {
-//     try {
-//       // Update project via API
-//       const res = await fetch(`/api/projects?id=${selectedProject.id}`, {
-//         method: "PUT",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify(editedProject),
-//       });
-
-//       if (res.ok) {
-//         const updatedProject = await res.json();
-//         setProject(updatedProject.data);
-//         setIsEditing(false);
-//       } else {
-//         console.error("Failed to update project");
-//       }
-//     } catch (error) {
-//       console.error("Error updating project:", error);
-//     }
-//   };
-
-//   const handleCancelEdit = () => {
-//     setEditedProject(project);
-//     setIsEditing(false);
-//   };
-
-//   const handleInputChange = (field, value) => {
-//     setEditedProject((prev) => ({
-//       ...prev,
-//       [field]: value,
-//     }));
-//   };
-
-//   // Generate PDF Report
-//   const generatePDFReport = () => {
-//     // Helper function to capitalize text
-//     const capitalizeText = (text) => {
-//       if (!text) return "Not specified";
-//       return text
-//         .toString()
-//         .toLowerCase()
-//         .split(" ")
-//         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-//         .join(" ");
-//     };
-
-//     // Helper function to capitalize task status
-//     const capitalizeStatus = (status) => {
-//       if (!status) return "";
-//       return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-//     };
-
-//     // Split tasks into two columns
-//     const splitTasksIntoColumns = (tasks) => {
-//       const midPoint = Math.ceil(tasks.length / 2);
-//       return {
-//         leftColumn: tasks.slice(0, midPoint),
-//         rightColumn: tasks.slice(midPoint),
-//       };
-//     };
-
-//     const { leftColumn, rightColumn } = splitTasksIntoColumns(tasks);
-
-//     // Create a printable HTML content for the report
-//     const reportContent = `
-//     <!DOCTYPE html>
-//     <html>
-//     <head>
-//       <title>${capitalizeText(selectedProject.name)} - Project Report</title>
-//       <style>
-//         body {
-//           font-family: Arial, sans-serif;
-//           margin: 40px;
-//           color: #333;
-//           line-height: 1.4;
-//         }
-//         .header {
-//           text-align: center;
-//           border-bottom: 2px solid #3b82f6;
-//           padding-bottom: 20px;
-//           margin-bottom: 30px;
-//         }
-//         .project-name {
-//           font-size: 28px;
-//           font-weight: bold;
-//           color: #1f2937;
-//           margin-bottom: 10px;
-//           text-transform: capitalize;
-//         }
-//         .section {
-//           margin-bottom: 25px;
-//         }
-//         .section-title {
-//           font-size: 18px;
-//           font-weight: bold;
-//           color: #3b82f6;
-//           margin-bottom: 10px;
-//           border-bottom: 1px solid #e5e7eb;
-//           padding-bottom: 5px;
-//         }
-//         .grid {
-//           display: grid;
-//           grid-template-columns: 1fr 1fr;
-//           gap: 15px;
-//         }
-//         .detail-item {
-//           margin-bottom: 8px;
-//         }
-//         .label {
-//           font-weight: bold;
-//           color: #6b7280;
-//           font-size: 14px;
-//         }
-//         .value {
-//           text-transform: capitalize;
-//         }
-//         .progress-bar {
-//           background: #e5e7eb;
-//           border-radius: 10px;
-//           height: 10px;
-//           margin: 5px 0;
-//         }
-//         .progress-fill {
-//           background: #3b82f6;
-//           height: 100%;
-//           border-radius: 10px;
-//         }
-//         .tasks-grid {
-//           display: grid;
-//           grid-template-columns: 1fr 1fr;
-//           gap: 20px;
-//           margin-top: 10px;
-//         }
-//         .task-column {
-//           display: flex;
-//           flex-direction: column;
-//           gap: 8px;
-//         }
-//         .task-item {
-//           display: flex;
-//           justify-content: space-between;
-//           align-items: center;
-//           padding: 10px 12px;
-//           border: 1px solid #e5e7eb;
-//           border-radius: 6px;
-//           background: #f9fafb;
-//         }
-//         .task-name {
-//           font-weight: 500;
-//           text-transform: capitalize;
-//           flex: 1;
-//         }
-//         .task-status {
-//           padding: 4px 10px;
-//           border-radius: 12px;
-//           font-size: 11px;
-//           font-weight: bold;
-//           text-transform: capitalize;
-//           white-space: nowrap;
-//           margin-left: 10px;
-//         }
-//         .status-completed {
-//           background: #d1fae5;
-//           color: #065f46;
-//         }
-//         .status-pending {
-//           background: #fef3c7;
-//           color: #92400e;
-//         }
-//         .status-in-progress {
-//           background: #dbeafe;
-//           color: #1e40af;
-//         }
-//         .status-on-hold {
-//           background: #f3e8ff;
-//           color: #6b21a8;
-//         }
-//         .completed .task-name {
-//           text-decoration: line-through;
-//           color: #9ca3af;
-//         }
-//         .generated {
-//           text-align: center;
-//           margin-top: 30px;
-//           color: #6b7280;
-//           font-size: 12px;
-//         }
-//         .no-tasks {
-//           grid-column: 1 / -1;
-//           text-align: center;
-//           padding: 20px;
-//           color: #6b7280;
-//           font-style: italic;
-//         }
-//         @media print {
-//           body { margin: 20px; }
-//           .section { break-inside: avoid; }
-//         }
-//       </style>
-//     </head>
-//     <body>
-//       <div class="header">
-//         <div class="project-name">${capitalizeText(selectedProject.name)}</div>
-//         <div>Project Report - Generated on ${new Date().toLocaleDateString()}</div>
-//       </div>
-
-//       <div class="section">
-//         <div class="section-title">Project Overview</div>
-//         <div class="grid">
-//           <div class="detail-item">
-//             <span class="label">Status:</span>
-//             <span class="value">${capitalizeText(selectedProject.status)}</span>
-//           </div>
-//           <div class="detail-item">
-//             <span class="label">Priority:</span>
-//             <span class="value">${capitalizeText(
-//               selectedProject.priority
-//             )}</span>
-//           </div>
-//           <div class="detail-item">
-//             <span class="label">Phase:</span>
-//             <span class="value">${capitalizeText(selectedProject.phase)}</span>
-//           </div>
-//           <div class="detail-item">
-//             <span class="label">Progress:</span> ${selectedProject.progress}%
-//           </div>
-//         </div>
-//         <div class="progress-bar">
-//           <div class="progress-fill" style="width: ${
-//             selectedProject.progress
-//           }%"></div>
-//         </div>
-//       </div>
-
-//       <div class="section">
-//         <div class="section-title">Project Details</div>
-//         <div class="grid">
-//           <div class="detail-item">
-//             <span class="label">Client:</span>
-//             <span class="value">${capitalizeText(
-//               selectedProject.client || "Not specified"
-//             )}</span>
-//           </div>
-//           <div class="detail-item">
-//             <span class="label">Project Manager:</span>
-//             <span class="value">${capitalizeText(
-//               selectedProject.project_manager || "Not specified"
-//             )}</span>
-//           </div>
-//           <div class="detail-item">
-//             <span class="label">Location:</span>
-//             <span class="value">${capitalizeText(
-//               selectedProject.location || "Not specified"
-//             )}</span>
-//           </div>
-//           <div class="detail-item">
-//             <span class="label">Contract Number:</span>
-//             <span class="value">${
-//               selectedProject.contract_number || "Not specified"
-//             }</span>
-//           </div>
-//           <div class="detail-item">
-//             <span class="label">Start Date:</span> ${formatDate(
-//               selectedProject.start_date
-//             )}
-//           </div>
-//           <div class="detail-item">
-//             <span class="label">End Date:</span> ${formatDate(
-//               selectedProject.end_date
-//             )}
-//           </div>
-//           <div class="detail-item">
-//             <span class="label">Budget:</span> ${formatBudget(
-//               selectedProject.budget
-//             )}
-//           </div>
-//         </div>
-//       </div>
-
-//       ${
-//         selectedProject.description
-//           ? `
-//       <div class="section">
-//         <div class="section-title">Description</div>
-//         <div class="value">${capitalizeText(selectedProject.description)}</div>
-//       </div>
-//       `
-//           : ""
-//       }
-
-//       <div class="section">
-//         <div class="section-title">Tasks (${tasks.length})</div>
-//         <div class="tasks-grid">
-//           ${
-//             tasks.length === 0
-//               ? `
-//             <div class="no-tasks">No tasks available for this project</div>
-//           `
-//               : `
-//             <div class="task-column">
-//               ${leftColumn
-//                 .map(
-//                   (task) => `
-//                 <div class="task-item ${
-//                   task.status === "completed" ? "completed" : ""
-//                 }">
-//                   <div class="task-name">${capitalizeText(task.task_name)}</div>
-//                   <span class="task-status status-${task.status
-//                     .toLowerCase()
-//                     .replace(" ", "-")}">
-//                     ${capitalizeStatus(task.status)}
-//                   </span>
-//                 </div>
-//               `
-//                 )
-//                 .join("")}
-//             </div>
-//             <div class="task-column">
-//               ${rightColumn
-//                 .map(
-//                   (task) => `
-//                 <div class="task-item ${
-//                   task.status === "completed" ? "completed" : ""
-//                 }">
-//                   <div class="task-name">${capitalizeText(task.task_name)}</div>
-//                   <span class="task-status status-${task.status
-//                     .toLowerCase()
-//                     .replace(" ", "-")}">
-//                     ${capitalizeStatus(task.status)}
-//                   </span>
-//                 </div>
-//               `
-//                 )
-//                 .join("")}
-//             </div>
-//           `
-//           }
-//         </div>
-//       </div>
-
-//       <div class="generated">
-//         Report generated on ${new Date().toLocaleString()}
-//       </div>
-//     </body>
-//     </html>
-//   `;
-
-//     // Open print dialog for PDF generation
-//     const printWindow = window.open("", "_blank");
-//     printWindow.document.write(reportContent);
-//     printWindow.document.close();
-
-//     // Wait for content to load before printing
-//     setTimeout(() => {
-//       printWindow.print();
-//       // Optional: close window after printing
-//       // setTimeout(() => printWindow.close(), 500);
-//     }, 250);
-//   };
-
-//   // Download Report as PDF or other formats
-//   const handleDownloadReport = (format = "pdf") => {
-//     // Helper function to capitalize text
-//     const capitalizeText = (text) => {
-//       if (!text) return "Not specified";
-//       return text
-//         .toString()
-//         .toLowerCase()
-//         .split(" ")
-//         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-//         .join(" ");
-//     };
-
-//     // Helper function to capitalize task status
-//     const capitalizeStatus = (status) => {
-//       if (!status) return "";
-//       return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-//     };
-
-//     switch (format) {
-//       case "pdf":
-//         generatePDFReport();
-//         break;
-//       case "json":
-//         // Create JSON report
-//         const report = {
-//           projectName: selectedProject.name,
-//           status: selectedProject.status,
-//           priority: selectedProject.priority,
-//           progress: `${selectedProject.progress}%`,
-//           client: selectedProject.client,
-//           projectManager: selectedProject.project_manager,
-//           location: selectedProject.location,
-//           startDate: formatDate(selectedProject.start_date),
-//           endDate: formatDate(selectedProject.end_date),
-//           budget: formatBudget(selectedProject.budget),
-//           description: selectedProject.description,
-//           tasks: tasks.map((task) => ({
-//             name: task.task_name,
-//             status: task.status,
-//           })),
-//           generatedAt: new Date().toLocaleString(),
-//         };
-
-//         const reportData = JSON.stringify(report, null, 2);
-//         const blob = new Blob([reportData], { type: "application/json" });
-//         const url = URL.createObjectURL(blob);
-//         const a = document.createElement("a");
-//         a.href = url;
-//         a.download = `${selectedProject.name.replace(/\s+/g, "_")}_report.json`;
-//         document.body.appendChild(a);
-//         a.click();
-//         document.body.removeChild(a);
-//         URL.revokeObjectURL(url);
-//         break;
-
-//       default:
-//         generatePDFReport();
-//     }
-//   };
-
-//   // Default placeholder image
-//   const defaultImage =
-//     "https://images.unsplash.com/photo-1504307651254-35680f356dfd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80";
-
-//   const currentImages = getImagesArray();
-//   const hasImages = currentImages.length > 0;
-
-//   return (
-//     <Transition show={open} as={Fragment}>
-//       <Dialog as="div" className="relative z-50" onClose={setOpen}>
-//         <TransitionChild
-//           as={Fragment}
-//           enter="ease-out duration-300"
-//           enterFrom="opacity-0"
-//           enterTo="opacity-100"
-//           leave="ease-in duration-200"
-//           leaveFrom="opacity-100"
-//           leaveTo="opacity-0"
-//         >
-//           <div className="fixed overflow-y-auto inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" />
-//         </TransitionChild>
-
-//         <div className="fixed inset-0 z-10 overflow-y-auto">
-//           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-//             <TransitionChild
-//               as={Fragment}
-//               enter="ease-out duration-300"
-//               enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-//               enterTo="opacity-100 translate-y-0 sm:scale-100"
-//               leave="ease-in duration-200"
-//               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-//               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-//             >
-//               <DialogPanel className="relative transform overflow-y-auto rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-6xl max-h-[90vh]">
-//                 {/* Close Button */}
-//                 <div className="absolute right-4 top-4 z-10">
-//                   <button
-//                     type="button"
-//                     className="rounded-full bg-white/90 p-2 text-gray-400 hover:text-gray-500 backdrop-blur-sm transition-all hover:scale-110"
-//                     onClick={() => setOpen(false)}
-//                   >
-//                     <span className="text-xl">×</span>
-//                   </button>
-//                 </div>
-
-//                 <div className="flex flex-col lg:flex-row">
-//                   {/* Image Gallery */}
-//                   <div className="lg:w-1/2">
-//                     <div className="relative h-80 sm:h-96 lg:h-full">
-//                       <img
-//                         src={
-//                           currentImages.length > 0
-//                             ? currentImages[selectedImageIndex]
-//                             : defaultImage
-//                         }
-//                         alt={selectedProject.name}
-//                         className="h-full w-full object-cover"
-//                       />
-
-//                       {/* Image Navigation */}
-//                       {currentImages.length > 1 && (
-//                         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-//                           {currentImages.map((_, index) => (
-//                             <button
-//                               key={index}
-//                               onClick={() => setSelectedImageIndex(index)}
-//                               className={`w-3 h-3 rounded-full transition-all ${
-//                                 selectedImageIndex === index
-//                                   ? "bg-white scale-125"
-//                                   : "bg-white/50 hover:bg-white/80"
-//                               }`}
-//                             />
-//                           ))}
-//                         </div>
-//                       )}
-
-//                       {/* Edit Mode Overlay */}
-//                       {isEditing && (
-//                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-//                           <div className="text-center text-white">
-//                             <div className="text-2xl mb-2">🖼️</div>
-//                             <p className="text-sm">
-//                               Click below to manage images
-//                             </p>
-//                           </div>
-//                         </div>
-//                       )}
-
-//                       {/* No Images Indicator */}
-//                       {!hasImages && (
-//                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-//                           <div className="text-center">
-//                             <div className="text-4xl mb-2">🖼️</div>
-//                             <p className="text-gray-500 text-sm">
-//                               No images available
-//                             </p>
-//                           </div>
-//                         </div>
-//                       )}
-//                     </div>
-//                     {/* Image Management Section */}
-//                     {isEditing && (
-//                       <div className="p-4 bg-blue-50 border-t border-blue-200">
-//                         <div className="flex items-center justify-between mb-3">
-//                           <h4 className="font-semibold text-blue-900">
-//                             Manage Images
-//                           </h4>
-//                           {uploading && (
-//                             <div className="flex items-center text-sm text-blue-600">
-//                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-//                               Uploading...
-//                             </div>
-//                           )}
-//                         </div>
-
-//                         {/* Upload Button */}
-//                         <label className="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg text-center cursor-pointer hover:bg-blue-700 transition-colors mb-3 disabled:bg-blue-400 disabled:cursor-not-allowed">
-//                           <span>
-//                             {uploading ? "Uploading..." : "Upload Images"}
-//                           </span>
-//                           <input
-//                             type="file"
-//                             multiple
-//                             accept="image/*"
-//                             onChange={handleImageUpload}
-//                             className="hidden"
-//                             disabled={uploading}
-//                           />
-//                         </label>
-
-//                         {/* Image Thumbnails with Remove Option */}
-//                         {currentImages.length > 0 && (
-//                           <div className="space-y-3">
-//                             <p className="text-sm text-blue-700">
-//                               {currentImages.length} image(s) in project folder
-//                               - Click × to remove
-//                             </p>
-//                             <div className="flex flex-wrap gap-2">
-//                               {currentImages.map((image, index) => (
-//                                 <div key={index} className="relative">
-//                                   <button
-//                                     onClick={() => removeImage(index)}
-//                                     className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs z-10 hover:bg-red-600 transition-colors shadow-lg"
-//                                     title="Remove image"
-//                                   >
-//                                     ×
-//                                   </button>
-//                                   <img
-//                                     src={image}
-//                                     alt={`Project image ${index + 1}`}
-//                                     className="w-20 h-20 rounded-lg object-cover border-2 border-blue-300 hover:border-blue-500 transition-colors"
-//                                     onError={(e) => {
-//                                       e.target.src = defaultImage;
-//                                     }}
-//                                   />
-//                                 </div>
-//                               ))}
-//                             </div>
-//                           </div>
-//                         )}
-//                       </div>
-//                     )}
-//                     {/* Thumbnail Strip (Non-edit mode) */}
-//                     {!isEditing && currentImages.length > 1 && (
-//                       <div className="flex space-x-2 p-4 bg-gray-50 overflow-x-auto">
-//                         {currentImages.map((image, index) => (
-//                           <button
-//                             key={index}
-//                             onClick={() => setSelectedImageIndex(index)}
-//                             className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-//                               selectedImageIndex === index
-//                                 ? "border-blue-500 ring-2 ring-blue-200"
-//                                 : "border-gray-200 hover:border-gray-300"
-//                             }`}
-//                           >
-//                             <img
-//                               src={image}
-//                               alt={`Thumbnail ${index + 1}`}
-//                               className="w-full h-full object-cover"
-//                             />
-//                           </button>
-//                         ))}
-//                       </div>
-//                     )}
-//                   </div>
-
-//                   {/* Project Details */}
-//                   <div className="lg:w-1/2 p-6 sm:p-8 overflow-y-auto">
-//                     {/* Header */}
-//                     <div className="mb-6">
-//                       <div className="flex items-start justify-between mb-3">
-//                         {isEditing ? (
-//                           <input
-//                             type="text"
-//                             value={editedProject.name || ""}
-//                             onChange={(e) =>
-//                               handleInputChange("name", e.target.value)
-//                             }
-//                             className="text-2xl font-bold text-gray-900 pr-8 border-b-2 border-blue-500 focus:outline-none focus:border-blue-700 w-full capitalize"
-//                           />
-//                         ) : (
-//                           <DialogTitle
-//                             as="h2"
-//                             className="text-2xl capitalize font-bold text-gray-900 pr-8"
-//                           >
-//                             {selectedProject.name}
-//                           </DialogTitle>
-//                         )}
-//                       </div>
-//                       <div className="flex flex-wrap gap-2 mb-4">
-//                         {isEditing ? (
-//                           <>
-//                             <select
-//                               value={editedProject.status || ""}
-//                               onChange={(e) =>
-//                                 handleInputChange("status", e.target.value)
-//                               }
-//                               className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border-2 border-gray-300 focus:outline-none focus:border-blue-500"
-//                             >
-//                               <option value="Planning">Planning</option>
-//                               <option value="In Progress">In Progress</option>
-//                               <option value="On Hold">On Hold</option>
-//                               <option value="Completed">Completed</option>
-//                               <option value="Cancelled">Cancelled</option>
-//                             </select>
-//                             <select
-//                               value={editedProject.priority || ""}
-//                               onChange={(e) =>
-//                                 handleInputChange("priority", e.target.value)
-//                               }
-//                               className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border-2 border-gray-300 focus:outline-none focus:border-blue-500"
-//                             >
-//                               <option value="Low">Low</option>
-//                               <option value="Medium">Medium</option>
-//                               <option value="High">High</option>
-//                             </select>
-//                             <input
-//                               type="text"
-//                               value={editedProject.phase || ""}
-//                               onChange={(e) =>
-//                                 handleInputChange("phase", e.target.value)
-//                               }
-//                               className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border-2 border-gray-300 focus:outline-none focus:border-blue-500 w-32 capitalize"
-//                               placeholder="Phase"
-//                             />
-//                           </>
-//                         ) : (
-//                           <>
-//                             <span
-//                               className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-//                                 selectedProject.status
-//                               )}`}
-//                             >
-//                               {selectedProject.status}
-//                             </span>
-//                             <span
-//                               className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(
-//                                 selectedProject.priority
-//                               )}`}
-//                             >
-//                               {selectedProject.priority} Priority
-//                             </span>
-//                             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-//                               {selectedProject.phase}
-//                             </span>
-//                           </>
-//                         )}
-//                       </div>
-//                     </div>
-
-//                     {/* Progress */}
-//                     <div className="mb-6">
-//                       <div className="flex justify-between items-center text-sm mb-2">
-//                         <span className="font-medium text-gray-700">
-//                           Project Progress
-//                         </span>
-//                         <span className="font-bold text-gray-900">
-//                           {/* {selectedProject.progress}% */}
-//                           {selectedProject.progress != null
-//                             ? Number(selectedProject.progress).toFixed(2)
-//                             : "0%"}
-//                           %
-//                         </span>
-//                       </div>
-//                       <div className="w-full bg-gray-200 rounded-full h-3">
-//                         <div
-//                           className={`rounded-full h-3 transition-all duration-1000 ${
-//                             Number(selectedProject.progress) === 100
-//                               ? "bg-green-500"
-//                               : Number(selectedProject.progress) > 0
-//                               ? "bg-green-500"
-//                               : "bg-gray-300"
-//                           }`}
-//                           style={{ width: `${selectedProject.progress}%` }}
-//                         />
-//                       </div>
-//                     </div>
-
-//                     {/* Tasks List - Collapsible */}
-//                     <div className="mb-6">
-//                       <button
-//                         onClick={() => setShowTasks(!showTasks)}
-//                         className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-//                       >
-//                         <h3 className="font-semibold text-gray-900">Tasks</h3>
-//                         <span className="transform transition-transform duration-200">
-//                           {showTasks ? "▼" : "▶"}
-//                         </span>
-//                       </button>
-
-//                       {showTasks && (
-//                         <div className="mt-3 transition-all duration-300">
-//                           {loadingTasks ? (
-//                             <p className="text-gray-500 text-center py-4">
-//                               Loading tasks...
-//                             </p>
-//                           ) : tasks.length === 0 ? (
-//                             <p className="text-gray-500 text-center py-4">
-//                               No tasks yet.
-//                             </p>
-//                           ) : (
-//                             <ul className="space-y-2 max-h-60 overflow-y-auto">
-//                               {tasks.map((task) => (
-//                                 <li
-//                                   key={task.id}
-//                                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
-//                                   onClick={() => toggleTaskStatus(task)}
-//                                 >
-//                                   <span
-//                                     className={
-//                                       task.status === "Completed"
-//                                         ? "text-green-500 capitalize"
-//                                         : "text-gray-900 capitalize"
-//                                     }
-//                                   >
-//                                     {task.task_name}
-//                                   </span>
-//                                   <span
-//                                     className={`px-2 py-1 text-xs font-semibold rounded-full ${
-//                                       task.status === "Completed"
-//                                         ? "bg-green-200 text-green-800"
-//                                         : "bg-yellow-200 text-yellow-800"
-//                                     }`}
-//                                   >
-//                                     {task.status}
-//                                   </span>
-//                                 </li>
-//                               ))}
-//                             </ul>
-//                           )}
-//                         </div>
-//                       )}
-//                     </div>
-
-//                     {/* Description */}
-//                     {selectedProject.description && (
-//                       <div className="mb-6">
-//                         <h3 className="text-sm font-semibold text-gray-900 mb-2">
-//                           Description
-//                         </h3>
-//                         {isEditing ? (
-//                           <textarea
-//                             value={editedProject.description || ""}
-//                             onChange={(e) =>
-//                               handleInputChange("description", e.target.value)
-//                             }
-//                             className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none h-24 capitalize"
-//                             placeholder="Project description..."
-//                           />
-//                         ) : (
-//                           <p className="text-gray-600 capitalize leading-relaxed">
-//                             {selectedProject.description}
-//                           </p>
-//                         )}
-//                       </div>
-//                     )}
-
-//                     {/* Project Details Grid */}
-//                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-//                       {[
-//                         {
-//                           key: "client",
-//                           label: "Client",
-//                           icon: "🏢",
-//                           editable: true,
-//                         },
-//                         {
-//                           key: "project_manager",
-//                           label: "Project Manager",
-//                           icon: "👤",
-//                           editable: true,
-//                         },
-//                         {
-//                           key: "location",
-//                           label: "Location",
-//                           icon: "📍",
-//                           editable: true,
-//                         },
-//                         {
-//                           key: "contract_number",
-//                           label: "Contract Number",
-//                           icon: "📄",
-//                           editable: true,
-//                         },
-//                         {
-//                           key: "start_date",
-//                           label: "Start Date",
-//                           icon: "📅",
-//                           editable: false,
-//                         },
-//                         {
-//                           key: "end_date",
-//                           label: "End Date",
-//                           icon: "🏁",
-//                           editable: false,
-//                         },
-//                         {
-//                           key: "budget",
-//                           label: "Budget",
-//                           icon: "💰",
-//                           editable: true,
-//                         },
-//                       ].map(({ key, label, icon, editable }) => (
-//                         <div
-//                           key={key}
-//                           className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
-//                         >
-//                           <IconWrapper>{icon}</IconWrapper>
-//                           <div className="flex-1">
-//                             <p className="text-xs text-gray-500">{label}</p>
-//                             {isEditing && editable ? (
-//                               <input
-//                                 type="text"
-//                                 value={editedProject[key] || ""}
-//                                 onChange={(e) =>
-//                                   handleInputChange(key, e.target.value)
-//                                 }
-//                                 className="w-full font-medium text-gray-900 border-b-2 border-blue-500 focus:outline-none focus:border-blue-700 capitalize"
-//                               />
-//                             ) : (
-//                               <p className="font-medium text-gray-900 capitalize">
-//                                 {key.includes("date")
-//                                   ? formatDate(project[key])
-//                                   : key === "budget"
-//                                   ? formatBudget(project[key])
-//                                   : project[key] || "Not specified"}
-//                               </p>
-//                             )}
-//                           </div>
-//                         </div>
-//                       ))}
-//                     </div>
-
-//                     {/* Action Buttons */}
-//                     <div className="flex space-x-3 pt-4 border-t border-gray-200">
-//                       {isEditing ? (
-//                         <>
-//                           <button
-//                             onClick={handleSave}
-//                             className="flex-1 bg-green-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-green-700 transition-colors duration-200"
-//                           >
-//                             Save Changes
-//                           </button>
-//                           <button
-//                             onClick={handleCancelEdit}
-//                             className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200"
-//                           >
-//                             Cancel
-//                           </button>
-//                         </>
-//                       ) : (
-//                         <>
-//                           <button
-//                             onClick={handleEdit}
-//                             className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors duration-200"
-//                           >
-//                             Edit Project
-//                           </button>
-//                           <div className="flex-1 relative group">
-//                             <button
-//                               onClick={() => handleDownloadReport("pdf")}
-//                               className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200"
-//                             >
-//                               Download Report
-//                             </button>
-//                             {/* Dropdown for report formats */}
-//                             <div className="absolute bottom-full left-0 mb-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20">
-//                               <button
-//                                 onClick={() => handleDownloadReport("pdf")}
-//                                 className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-t-lg border-b border-gray-100"
-//                               >
-//                                 📄 PDF Report
-//                               </button>
-//                               <button
-//                                 onClick={() => handleDownloadReport("json")}
-//                                 className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-b-lg"
-//                               >
-//                                 ⚙️ JSON Data
-//                               </button>
-//                             </div>
-//                           </div>
-//                         </>
-//                       )}
-//                     </div>
-//                   </div>
-//                 </div>
-//               </DialogPanel>
-//             </TransitionChild>
-//           </div>
-//         </div>
-//       </Dialog>
-//     </Transition>
-//   );
-// }
 "use client";
+
 import { Fragment, useEffect, useState } from "react";
 import {
   Dialog,
@@ -1275,6 +9,7 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import toast from "react-hot-toast";
+import { Loader } from "lucide-react";
 
 // Simple icon fallbacks using emojis
 const IconWrapper = ({ children, className = "" }) => (
@@ -1307,6 +42,7 @@ export default function ProjectDetailsModal({
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [editedPhases, setEditedPhases] = useState([]);
   const [updating, setUpdating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // keep selectedProject in sync with prop changes
   useEffect(() => {
@@ -1829,6 +565,7 @@ export default function ProjectDetailsModal({
   };
 
   const handleSave = async () => {
+    setIsUpdating(true);
     try {
       const res = await fetch(`/api/projects?id=${selectedProject.id}`, {
         method: "PUT",
@@ -1850,6 +587,8 @@ export default function ProjectDetailsModal({
     } catch (error) {
       console.error("Error updating project:", error);
       toast.error("Error saving project");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -1862,7 +601,7 @@ export default function ProjectDetailsModal({
     setEditedProject((prev) => ({ ...prev, [field]: value }));
   };
 
-  // ---------- Reports (kept as original) ----------
+  // ---------- Reports ----------
   const formatDate = (dateString) => {
     if (!dateString) return "Not specified";
     try {
@@ -1886,59 +625,432 @@ export default function ProjectDetailsModal({
   };
 
   const generatePDFReport = () => {
-    // Your existing PDF generation logic can remain here.
-    // (Kept intentionally minimal — you already had it.)
-    const reportContent = `<html><body><h1>${
-      selectedProject?.name || ""
-    }</h1></body></html>`;
+    const project = selectedProject || {};
+
+    // Helper to capitalize text like in your modal
+    const capitalizeModalText = (text) => {
+      if (!text) return "Not specified";
+      return text
+        .toString()
+        .split(" ")
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join(" ");
+    };
+
+    const reportContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${project.name || "Project"} Report</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body { 
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+          margin: 40px; 
+          color: #111827;
+          line-height: 1.5;
+          background: white;
+        }
+        
+        /* Header Section */
+        .project-header {
+          margin-bottom: 24px;
+        }
+        .project-title {
+          font-size: 24px;
+          font-weight: 700;
+          color: #111827;
+          margin-bottom: 12px;
+          text-transform: capitalize;
+        }
+        .badge-container {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-bottom: 24px;
+        }
+        .badge {
+          padding: 6px 12px;
+          border-radius: 9999px;
+          font-size: 14px;
+          font-weight: 500;
+          border: 1px solid;
+        }
+        .status-badge { 
+          background: #dbeafe; 
+          color: #1e40af;
+          border-color: #bfdbfe;
+        }
+        .priority-badge { 
+          background: #fef3c7; 
+          color: #92400e;
+          border-color: #fde68a;
+        }
+        .phase-badge { 
+          background: #f3e8ff; 
+          color: #7c3aed;
+          border-color: #e9d5ff;
+        }
+        
+        /* Progress Section - Exact match to modal */
+        .progress-section {
+          margin: 24px 0;
+        }
+        .progress-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+          font-size: 14px;
+        }
+        .progress-label {
+          font-weight: 500;
+          color: #374151;
+        }
+        .progress-value {
+          font-weight: 700;
+          color: #111827;
+        }
+        .progress-bar-container {
+          width: 100%;
+          background: #e5e7eb;
+          border-radius: 6px;
+          height: 12px;
+          overflow: hidden;
+        }
+        .progress-bar-fill {
+          height: 100%;
+          border-radius: 6px;
+          background: linear-gradient(90deg, #10b981, #059669);
+          transition: width 0.3s ease;
+        }
+        
+        /* Description Section */
+        .description-section {
+          margin: 24px 0;
+        }
+        .description-label {
+          font-size: 14px;
+          font-weight: 600;
+          color: #111827;
+          margin-bottom: 8px;
+        }
+        .description-text {
+          color: #6b7280;
+          line-height: 1.6;
+          text-transform: capitalize;
+        }
+        
+        /* Details Grid - Two column layout */
+        .details-section {
+          margin: 24px 0;
+        }
+        .details-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        .detail-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 12px 0;
+        }
+        .detail-icon {
+          width: 20px;
+          text-align: center;
+          font-size: 16px;
+          flex-shrink: 0;
+        }
+        .detail-content {
+          flex: 1;
+        }
+        .detail-label {
+          font-size: 12px;
+          color: #6b7280;
+          font-weight: 500;
+          margin-bottom: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+        }
+        .detail-value {
+          font-size: 14px;
+          font-weight: 500;
+          color: #111827;
+          text-transform: capitalize;
+        }
+        
+        /* Tasks Section - Two column grid */
+        .tasks-section {
+          margin: 32px 0;
+        }
+        .section-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #111827;
+          margin-bottom: 16px;
+          padding-bottom: 8px;
+          border-bottom: 2px solid #e5e7eb;
+        }
+        .tasks-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+        .task-item {
+          background: #f8fafc;
+          padding: 16px;
+          border-radius: 8px;
+          border-left: 4px solid #3b82f6;
+        }
+        .task-name {
+          font-weight: 500;
+          color: #374151;
+          margin-bottom: 4px;
+          text-transform: capitalize;
+        }
+        .task-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 12px;
+        }
+        .task-status {
+          color: #6b7280;
+          text-transform: capitalize;
+        }
+        .task-progress {
+          font-weight: 600;
+          color: #059669;
+        }
+        
+        .footer {
+          text-align: center;
+          margin-top: 40px;
+          color: #9ca3af;
+          font-size: 12px;
+          padding-top: 20px;
+          border-top: 1px solid #e5e7eb;
+        }
+        
+        @media print {
+          body { margin: 20px; }
+        }
+      </style>
+    </head>
+    <body>
+      <!-- Header -->
+      <div class="project-header">
+        <h1 class="project-title">${capitalizeModalText(project.name)}</h1>
+        <div class="badge-container">
+          <span class="badge status-badge">${
+            project.status || "No Status"
+          }</span>
+          <span class="badge priority-badge">${
+            project.priority || "No Priority"
+          } Priority</span>
+          <span class="badge phase-badge">${project.phase || "No Phase"}</span>
+        </div>
+      </div>
+      
+      <!-- Progress -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Project Progress</span>
+          <span class="progress-value">${project.progress || 0}%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" style="width: ${
+            project.progress || 0
+          }%"></div>
+        </div>
+      </div>
+      
+      <!-- Description -->
+      ${
+        project.description
+          ? `
+      <div class="description-section">
+        <div class="description-label">Description</div>
+        <div class="description-text">${capitalizeModalText(
+          project.description
+        )}</div>
+      </div>
+      `
+          : ""
+      }
+      
+      <!-- Project Details Grid -->
+      <div class="details-section">
+        <div class="details-grid">
+          <div class="detail-item">
+            <div class="detail-icon">🏢</div>
+            <div class="detail-content">
+              <div class="detail-label">Client</div>
+              <div class="detail-value">${capitalizeModalText(
+                project.client || "Not specified"
+              )}</div>
+            </div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-icon">👤</div>
+            <div class="detail-content">
+              <div class="detail-label">Project Manager</div>
+              <div class="detail-value">${capitalizeModalText(
+                project.project_manager || "Not specified"
+              )}</div>
+            </div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-icon">📍</div>
+            <div class="detail-content">
+              <div class="detail-label">Location</div>
+              <div class="detail-value">${capitalizeModalText(
+                project.location || "Not specified"
+              )}</div>
+            </div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-icon">📄</div>
+            <div class="detail-content">
+              <div class="detail-label">Contract Number</div>
+              <div class="detail-value">${capitalizeModalText(
+                project.contract_number || "Not specified"
+              )}</div>
+            </div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-icon">📅</div>
+            <div class="detail-content">
+              <div class="detail-label">Start Date</div>
+              <div class="detail-value">${formatDate(project.start_date)}</div>
+            </div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-icon">🏁</div>
+            <div class="detail-content">
+              <div class="detail-label">End Date</div>
+              <div class="detail-value">${formatDate(project.end_date)}</div>
+            </div>
+          </div>
+          
+          <div class="detail-item">
+            <div class="detail-icon">💰</div>
+            <div class="detail-content">
+              <div class="detail-label">Budget</div>
+              <div class="detail-value">${formatBudget(project.budget)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tasks Section - Two Column Grid -->
+      ${
+        tasks.length > 0
+          ? `
+      <div class="tasks-section">
+        <div class="section-title">Tasks</div>
+        <div class="tasks-grid">
+          ${tasks
+            .map(
+              (task) => `
+            <div class="task-item">
+              <div class="task-name">${capitalizeModalText(
+                task.task_name || "Unnamed Task"
+              )}</div>
+              <div class="task-meta">
+                <span class="task-status">${task.status || "No Status"}</span>
+                <span class="task-progress">${task.progress || 0}%</span>
+              </div>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      </div>
+      `
+          : ""
+      }
+      
+      <div class="footer">
+        Report generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+      </div>
+    </body>
+    </html>
+  `;
+
     const printWindow = window.open("", "_blank");
     printWindow.document.write(reportContent);
     printWindow.document.close();
+
     setTimeout(() => {
       printWindow.print();
-    }, 250);
+    }, 500);
   };
 
   const handleDownloadReport = (format = "pdf") => {
+    // Helper function to capitalize text
+    const capitalizeText = (text) => {
+      if (!text) return "Not specified";
+      return text
+        .toString()
+        .toLowerCase()
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    };
+
+    // Helper function to capitalize task status
+    const capitalizeStatus = (status) => {
+      if (!status) return "";
+      return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    };
+
     switch (format) {
       case "pdf":
         generatePDFReport();
         break;
-      case "json": {
+      case "json":
+        // Create JSON report
         const report = {
-          projectName: selectedProject?.name,
-          status: selectedProject?.status,
-          priority: selectedProject?.priority,
-          progress: `${selectedProject?.progress ?? 0}%`,
-          client: selectedProject?.client,
-          projectManager: selectedProject?.project_manager,
-          location: selectedProject?.location,
-          startDate: formatDate(selectedProject?.start_date),
-          endDate: formatDate(selectedProject?.end_date),
-          budget: formatBudget(selectedProject?.budget),
-          description: selectedProject?.description,
+          projectName: selectedProject.name,
+          status: selectedProject.status,
+          priority: selectedProject.priority,
+          progress: `${selectedProject.progress}%`,
+          client: selectedProject.client,
+          projectManager: selectedProject.project_manager,
+          location: selectedProject.location,
+          startDate: formatDate(selectedProject.start_date),
+          endDate: formatDate(selectedProject.end_date),
+          budget: formatBudget(selectedProject.budget),
+          description: selectedProject.description,
           tasks: tasks.map((task) => ({
             name: task.task_name,
             status: task.status,
-            progress: task.progress,
           })),
           generatedAt: new Date().toLocaleString(),
         };
+
         const reportData = JSON.stringify(report, null, 2);
         const blob = new Blob([reportData], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${(selectedProject?.name || "project").replace(
-          /\s+/g,
-          "_"
-        )}_report.json`;
+        a.download = `${selectedProject.name.replace(/\s+/g, "_")}_report.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         break;
-      }
+
       default:
         generatePDFReport();
     }
@@ -2386,10 +1498,18 @@ export default function ProjectDetailsModal({
                         {isEditing ? (
                           <>
                             <button
-                              onClick={handleSave}
+                              onClick={() => {
+                                handleSave();
+                                // isUpdating(true);
+                              }}
+                              disabled={isUpdating}
                               className="flex-1 bg-green-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-green-700 transition-colors duration-200"
                             >
-                              Save Changes
+                              {isUpdating ? (
+                                <Loader className="flex items-center mx-auto animate-spin" />
+                              ) : (
+                                "Save Changes"
+                              )}
                             </button>
                             <button
                               onClick={handleCancelEdit}
@@ -2439,7 +1559,7 @@ export default function ProjectDetailsModal({
           </div>
         </Dialog>
       </Transition>
-      {/* Slide Drawer */}
+      {/* Slide Drawer - FIXED: Using correct component names */}
       <Transition show={showTasks} as={Fragment}>
         <Dialog
           as="div"
@@ -2447,7 +1567,7 @@ export default function ProjectDetailsModal({
           onClose={() => setShowTasks(false)}
         >
           {/* Overlay */}
-          <Transition.Child
+          <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
             enterFrom="opacity-0"
@@ -2457,10 +1577,10 @@ export default function ProjectDetailsModal({
             leaveTo="opacity-0"
           >
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-          </Transition.Child>
+          </TransitionChild>
 
           <div className="fixed inset-0 flex justify-end">
-            <Transition.Child
+            <TransitionChild
               as={Fragment}
               enter="transform transition ease-in-out duration-300"
               enterFrom="translate-x-full"
@@ -2469,7 +1589,7 @@ export default function ProjectDetailsModal({
               leaveFrom="translate-x-0"
               leaveTo="translate-x-full"
             >
-              <Dialog.Panel className="w-full max-w-md h-full bg-white shadow-xl overflow-y-auto p-6">
+              <DialogPanel className="w-full max-w-md h-full bg-white shadow-xl overflow-y-auto p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-bold text-gray-900">
                     Phase / Task Details
@@ -2554,8 +1674,8 @@ export default function ProjectDetailsModal({
                     </button>
                   </>
                 )}
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </Dialog>
       </Transition>

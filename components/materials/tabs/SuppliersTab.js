@@ -16,6 +16,7 @@ const SuppliersTab = ({
   setShowEditSupplierModal,
   editingSupplier,
 }) => {
+  console.log("suppliers list:", suppliers);
   if (loading) {
     return (
       <div className="flex justify-center py-8">

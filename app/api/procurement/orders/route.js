@@ -29,44 +29,36 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    const {
-      requirement_id,
-      material_id,
-      material_name,
-      supplier_id,
-      supplier_name,
-      quantity,
-      unit_cost,
-      total_cost,
-      expected_delivery,
-      project_phase,
-      notes,
-    } = await request.json();
+    const body = await request.json();
+    console.log("order body:", body);
+    // const {
+    //   requirement_id,
+    //   master_material_id: material_id,
+    //   material_name,
+    //   supplier_id,
+    //   supplier_name,
+    //   quantity,
+    //   unit_cost,
+    //   total_cost,
+    //   expected_delivery,
+    //   project_phase,
+    //   notes,
+    // } = await request.json();
 
     // Create procurement order
     const { data: order, error } = await supabase
       .from("procurement_orders")
       .insert([
         {
-          material_id,
-          supplier_id,
-          supplier_name,
-          material_name,
-          quantity: parseFloat(quantity),
-          unit_cost: parseFloat(unit_cost),
-          total_cost: parseFloat(total_cost),
-          expected_delivery,
-          project_phase,
-          notes,
+          ...body,
           status: "pending",
-          requirement_id,
           created_by: "Anteneh",
         },
       ])
       .select(
         `
         *,
-        master_materials (name, unit, category,supplier),
+        master_materials (id, name, unit, category,supplier),
         material-requirements (project_id, project_phase),
         suppliers (name, contact_person, email, phone)
       `

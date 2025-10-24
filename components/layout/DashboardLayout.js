@@ -47,7 +47,15 @@ export default function DashboardLayout({ children }) {
                   }}
                 />
                 <div className="h-8 w-8 bg-primary-600 rounded flex items-center justify-center text-white font-bold text-sm hidden">
-                  BS
+                  <img
+                    src="/images/logo.png"
+                    alt="BSGC Logo"
+                    className="h-8 w-8 object-contain"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "flex";
+                    }}
+                  />{" "}
                 </div>
               </div>
               <span className="ml-3 text-xl font-semibold text-gray-900 tracking-tight dark:text-white">

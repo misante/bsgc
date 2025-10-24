@@ -14,6 +14,7 @@ export function useSuppliers() {
       const res = await fetch("/api/suppliers");
       const data = await res.json();
       console.log("suppliers data:", data);
+      setSuppliers(data.suppliers);
     } catch (error) {
       console.error("Error fetching suppliers:", error);
       toast.error("Failed to load suppliers");

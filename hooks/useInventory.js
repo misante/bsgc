@@ -14,40 +14,6 @@ export function useInventory() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // const fetchInventory = useCallback(
-  //   async (customFilters = null) => {
-  //     setLoading(true);
-  //     try {
-  //       const { search, category, status, page } = customFilters || filters;
-
-  //       const queryParams = new URLSearchParams({
-  //         search: search || "",
-  //         category: category || "all",
-  //         status: status || "all",
-  //         page: page?.toString() || "1",
-  //         limit: "50",
-  //       });
-
-  //       const res = await fetch(`/api/materials/inventory?${queryParams}`);
-  //       const data = await res.json();
-  //       // console.log("inventory data:", data);
-  //       if (!data.error) {
-  //         setInventory(data.inventory || []);
-  //         setTotalPages(data.totalPages || 1);
-  //         setTotalCount(data.totalCount || 0);
-  //       } else {
-  //         toast.error("Failed to load inventory");
-  //       }
-  //     } catch (err) {
-  //       console.error("fetchInventory:", err);
-  //       toast.error("Failed to load inventory");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   },
-  //   [filters]
-  // );
-
   const fetchInventory = useCallback(
     async (customFilters = null) => {
       setLoading(true);
@@ -114,27 +80,59 @@ export function useInventory() {
     }
   };
 
+  // const handleUpdateInventory = async (id, payload) => {
+  //   try {
+  //     const res = await fetch(`/api/materials/inventory/${id}`, {
+  //       method: "PATCH",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(payload),
+  //     });
+  //     if (res.ok) {
+  //       await fetchInventory();
+  //       toast.success("Inventory item updated successfully");
+  //       return true;
+  //     } else {
+  //       toast.error("Failed to update inventory item");
+  //       return false;
+  //     }
+  //   } catch (err) {
+  //     toast.error("Failed to update inventory item");
+  //     return false;
+  //   }
+  // };
   const handleUpdateInventory = async (id, payload) => {
     try {
-      const res = await fetch(`/api/materials/inventory/${id}`, {
+      // The payload comes from the UpdateStockModal with fields like:
+      // { quantity, location, batchNumber, notes }
+      const updateData = {
+        total_quantity: payload.quantity,
+        location: payload.location,
+        batch_number: payload.batchNumber,
+        notes: payload.notes,
+        // Add any other fields you want to update
+      };
+
+      const res = await fetch(`/api/materials/inventory/material-stock/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(updateData),
       });
+
       if (res.ok) {
         await fetchInventory();
         toast.success("Inventory item updated successfully");
         return true;
       } else {
-        toast.error("Failed to update inventory item");
+        const errorData = await res.json();
+        toast.error(errorData.error || "Failed to update inventory item");
         return false;
       }
     } catch (err) {
+      console.error("Update inventory error:", err);
       toast.error("Failed to update inventory item");
       return false;
     }
   };
-
   const handleDeleteInventory = async (id) => {
     try {
       const res = await fetch(`/api/materials/inventory/${id}`, {

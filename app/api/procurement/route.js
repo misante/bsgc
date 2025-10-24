@@ -11,7 +11,7 @@ export async function GET(request) {
     let query = supabase.from("procurement_orders").select(
       `
         *,
-        master_materials (name, unit, category)
+        master_materials (id,name, unit, category)
       `,
       { count: "exact" }
     );
@@ -62,14 +62,14 @@ export async function POST(request) {
 
     // Get material details for cost calculation
     const { data: material, error: materialError } = await supabase
-      .from("materials")
-      .select("cost_per_unit")
+      .from("master_materials")
+      .select("unit_cost")
       .eq("id", material_id)
       .single();
 
     if (materialError) throw materialError;
 
-    const unit_cost = material.cost_per_unit;
+    const unit_cost = material.unit_cost;
     const total_cost = unit_cost ? unit_cost * parseFloat(quantity) : null;
 
     const { data: order, error } = await supabase
@@ -91,7 +91,7 @@ export async function POST(request) {
       .select(
         `
         *,
-        materials (name, unit)
+        materials (id, name, unit)
       `
       )
       .single();
