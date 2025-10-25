@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import CreateMaterialRequestModal from "../modals/CreateMaterialRequestModal";
+import EditMaterialRequestModal from "../modals/EditMaterialRequestModal"; // New modal (to be created)
 import { useMasterMaterials } from "@/hooks/useMasterMaterials";
 import DeliveryConfirmationModal from "../modals/DeliveryConfirmationModal";
 import toast from "react-hot-toast";
@@ -30,8 +31,8 @@ const MaterialRequestsTab = () => {
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cancelling, setCancelling] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false); // New state for edit modal
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [filters, setFilters] = useState({
@@ -39,11 +40,9 @@ const MaterialRequestsTab = () => {
     search: "",
   });
   const [loadingStates, setLoadingStates] = useState({});
-
-  // Use the manpower context with full user data from Supabase
+  console.log("requests:", requests);
   const { manpower, loading: userLoading, error: userError } = useManpower();
 
-  // Debug log to see what's happening
   useEffect(() => {
     console.log("🔄 MaterialRequestsTab - masterMaterials:", {
       data: masterMaterials,
@@ -59,7 +58,6 @@ const MaterialRequestsTab = () => {
   }, [masterMaterials, materialsLoading, manpower, userLoading, userError]);
 
   useEffect(() => {
-    // Only fetch requests when masterMaterials are available and not loading
     if (!materialsLoading && masterMaterials && masterMaterials.length > 0) {
       console.log("📦 Fetching requests because masterMaterials are available");
       fetchRequests();
@@ -99,7 +97,6 @@ const MaterialRequestsTab = () => {
 
   const handleConfirmDelivery = async (requestId, deliveryData) => {
     try {
-      // Use manpower data for delivery confirmation
       const deliveryWithUser = {
         ...deliveryData,
         delivered_by: manpower?.email || "Unknown User",
@@ -124,7 +121,6 @@ const MaterialRequestsTab = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Update local state
         setRequests((prev) =>
           prev.map((req) =>
             req.id === requestId
@@ -145,7 +141,6 @@ const MaterialRequestsTab = () => {
       }
     } catch (error) {
       console.error("Error confirming delivery:", error);
-      // Show specific error message for stock issues
       if (error.message.includes("Insufficient stock")) {
         toast.error("Cannot deliver: Insufficient stock available");
       } else {
@@ -164,7 +159,6 @@ const MaterialRequestsTab = () => {
     setLoadingStates((prev) => ({ ...prev, [requestId]: { approve: true } }));
 
     try {
-      // Use manpower data for approval
       const approvalData = {
         approved_by: manpower?.email || "Unknown User",
         status: "approved",
@@ -184,7 +178,6 @@ const MaterialRequestsTab = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Update local state
         setRequests((prev) =>
           prev.map((req) =>
             req.id === requestId
@@ -196,7 +189,6 @@ const MaterialRequestsTab = () => {
           )
         );
 
-        // Show appropriate message based on stock availability
         if (result.stock_info?.sufficient) {
           toast.success("Request approved - Ready for delivery!");
         } else {
@@ -229,7 +221,6 @@ const MaterialRequestsTab = () => {
     setLoadingStates((prev) => ({ ...prev, [requestId]: { reject: true } }));
 
     try {
-      // Use manpower data for rejection
       const rejectionData = {
         rejected_by: manpower?.email || "Unknown User",
         rejected_by_id: manpower?.id || null,
@@ -254,7 +245,6 @@ const MaterialRequestsTab = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Update local state
         setRequests((prev) =>
           prev.map((req) =>
             req.id === requestId
@@ -279,38 +269,108 @@ const MaterialRequestsTab = () => {
       setLoadingStates((prev) => ({ ...prev, [requestId]: { reject: false } }));
     }
   };
-  const deleteRequest = async (requestId) => {
-    confirm("Are You sure You want to cancel this request?");
-    setCancelling(true);
+
+  const handleEdit = (request) => {
+    setSelectedRequest(request);
+    setShowEditModal(true);
+  };
+
+  const handleEditRequest = async (requestId, updatedData) => {
+    setLoadingStates((prev) => ({ ...prev, [requestId]: { edit: true } }));
+
     try {
+      const editData = {
+        ...updatedData,
+        updated_by: manpower?.email || "Unknown User",
+        updated_by_id: manpower?.id || null,
+        updated_by_name:
+          manpower?.first_name && manpower?.last_name
+            ? `${manpower.first_name} ${manpower.last_name}`
+            : manpower?.first_name || manpower?.email || "Unknown User",
+      };
+
       const response = await fetch(
-        `/api/materials/material-requests/${requestId}/delete`,
+        `/api/materials/material-requests/${requestId}/edit`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ canceled_by: manpower.email }),
+          body: JSON.stringify(editData),
         }
       );
 
       const result = await response.json();
 
       if (result.success) {
-        await fetchRequests();
+        setRequests((prev) =>
+          prev.map((req) =>
+            req.id === requestId ? { ...req, ...result.data } : req
+          )
+        );
+        toast.success("Request updated successfully");
+        setShowEditModal(false);
+        setSelectedRequest(null);
+      } else {
+        console.error("Failed to update request:", result.error);
+        toast.error(`Failed to update: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error updating request:", error);
+      toast.error("Failed to update request");
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [requestId]: { edit: false } }));
+    }
+  };
+
+  const deleteRequest = async (requestId) => {
+    if (!manpower?.email) {
+      toast.error("User data not available. Please try again.");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to cancel this request?")) {
+      return;
+    }
+
+    setLoadingStates((prev) => ({ ...prev, [requestId]: { delete: true } }));
+
+    try {
+      const response = await fetch(
+        `/api/materials/material-requests/${requestId}/delete`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            canceled_by: manpower.email,
+            canceled_by_id: manpower?.id || null,
+            canceled_by_name:
+              manpower?.first_name && manpower?.last_name
+                ? `${manpower.first_name} ${manpower.last_name}`
+                : manpower?.first_name || manpower?.email || "Unknown User",
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        setRequests((prev) => prev.filter((req) => req.id !== requestId));
         toast.success("Request deleted successfully");
       } else {
         console.error("Failed to delete request:", result.error);
         toast.error(`Failed to delete: ${result.error}`);
       }
     } catch (error) {
-      console.error("Error rejecting request:", error);
-      toast.error("Failed to reject request");
+      console.error("Error deleting request:", error);
+      toast.error("Failed to delete request");
     } finally {
-      setCancelling(false);
+      setLoadingStates((prev) => ({ ...prev, [requestId]: { delete: false } }));
     }
   };
-  // Show loading state while user data is being fetched
+
   if (userLoading) {
     return (
       <div className="flex flex-col justify-center items-center py-16">
@@ -322,7 +382,6 @@ const MaterialRequestsTab = () => {
     );
   }
 
-  // Show error state if user data failed to load
   if (userError && !manpower) {
     return (
       <div className="text-center py-16 px-6">
@@ -341,7 +400,6 @@ const MaterialRequestsTab = () => {
     );
   }
 
-  // Show loading state while masterMaterials are being fetched
   if (materialsLoading) {
     return (
       <div className="flex flex-col justify-center items-center py-16">
@@ -353,7 +411,6 @@ const MaterialRequestsTab = () => {
     );
   }
 
-  // Show error state if masterMaterials failed to load
   if (!masterMaterials) {
     return (
       <div className="text-center py-16 px-6">
@@ -374,7 +431,6 @@ const MaterialRequestsTab = () => {
     );
   }
 
-  // Show empty state if no masterMaterials
   if (masterMaterials.length === 0) {
     return (
       <div className="text-center py-16 px-6">
@@ -423,7 +479,6 @@ const MaterialRequestsTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -452,7 +507,6 @@ const MaterialRequestsTab = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
@@ -484,7 +538,6 @@ const MaterialRequestsTab = () => {
         </select>
       </div>
 
-      {/* Requests Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -589,9 +642,9 @@ const MaterialRequestsTab = () => {
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => handleEdit(request.id)}
+                              onClick={() => handleEdit(request)}
                               disabled={isLoading(request.id, "edit")}
-                              className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
+                              className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors disabled:opacity-50"
                               title="Edit Request"
                             >
                               {isLoading(request.id, "edit") ? (
@@ -608,7 +661,7 @@ const MaterialRequestsTab = () => {
                               className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
                               title="Cancel Request"
                             >
-                              {cancelling ? (
+                              {isLoading(request.id, "delete") ? (
                                 <Loader className="w-4 h-4 animate-spin" />
                               ) : (
                                 <X className="w-4 h-4" />
@@ -653,20 +706,31 @@ const MaterialRequestsTab = () => {
         </div>
       </div>
 
-      {/* Create Request Modal */}
       <CreateMaterialRequestModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         masterMaterials={masterMaterials}
         materialStock={materialStock}
-        currentUser={manpower} // Pass manpower data to modal
+        currentUser={manpower}
         onRequestCreated={() => {
           setShowCreateModal(false);
           fetchRequests();
         }}
       />
 
-      {/* Delivery Confirmation Modal */}
+      <EditMaterialRequestModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedRequest(null);
+        }}
+        request={selectedRequest}
+        masterMaterials={masterMaterials}
+        materialStock={materialStock}
+        currentUser={manpower}
+        onRequestUpdated={handleEditRequest}
+      />
+
       <DeliveryConfirmationModal
         isOpen={showDeliveryModal}
         onClose={() => {
@@ -674,7 +738,7 @@ const MaterialRequestsTab = () => {
           setSelectedRequest(null);
         }}
         request={selectedRequest}
-        currentUser={manpower} // Pass manpower data to modal
+        currentUser={manpower}
         onConfirmDelivery={handleConfirmDelivery}
       />
     </div>

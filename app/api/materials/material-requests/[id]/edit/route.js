@@ -7,7 +7,8 @@ export async function PUT(request, { params }) {
     const { id } = await params;
     console.log("material-id:", id);
     const body = await request.json();
-    const { material_id, requested_quantity, request_reason } = body;
+    const { material_id, requested_quantity, project_id, request_reason } =
+      body;
 
     // Check if request exists and is pending
     const { data: existingRequest, error: fetchError } = await supabase
@@ -37,6 +38,7 @@ export async function PUT(request, { params }) {
       .update({
         material_id,
         requested_quantity,
+        project_id,
         request_reason,
         updated_at: new Date().toISOString(),
       })

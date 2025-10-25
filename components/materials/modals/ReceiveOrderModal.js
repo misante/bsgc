@@ -96,6 +96,7 @@ const ReceiveOrderModal = ({
     const orderReceiptDetail = {
       ...formData,
       location: formData.location,
+      project_id: order.project_id,
       expiry_date: formData.expiry_date || null,
     };
     try {
@@ -680,10 +681,18 @@ const ReceiveForm = ({
           Quality Check
         </h4>
         <div className="space-y-2 text-sm text-yellow-700 dark:text-yellow-100">
-          <p>✓ Verify material quantity matches order</p>
-          <p>✓ Check material quality and specifications</p>
-          <p>✓ Confirm no damages during transportation</p>
-          <p>✓ Ensure proper storage conditions</p>
+          <p className="dark:text-yellow-50">
+            ✓ Verify material quantity matches order
+          </p>
+          <p className="dark:text-yellow-50">
+            ✓ Check material quality and specifications
+          </p>
+          <p className="dark:text-yellow-50">
+            ✓ Confirm no damages during transportation
+          </p>
+          <p className="dark:text-yellow-50">
+            ✓ Ensure proper storage conditions
+          </p>
         </div>
       </div>
 

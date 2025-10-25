@@ -9,7 +9,7 @@ export async function GET() {
       .select(
         `
         *,
-        master_materials (name, unit, category),
+        master_materials (id,name, unit, category),
         material-requirements (project_id, project_phase),
         suppliers (name, contact_person, email, phone)
       `

@@ -4,8 +4,15 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(request) {
   try {
-    const { material_id, requested_quantity, requested_by, request_reason } =
-      await request.json();
+    // const body =request.json()
+    const {
+      material_id,
+      requested_quantity,
+      requested_by,
+      request_reason,
+      project_id,
+      project_name,
+    } = await request.json();
 
     // Validate required fields
     if (!material_id || !requested_quantity || !requested_by) {
@@ -18,7 +25,9 @@ export async function POST(request) {
     // Check if material exists and has sufficient stock
     const { data: materialStock, error: stockError } = await supabase
       .from("material_stock")
-      .select("total_quantity, master_materials(name, unit, min_stock_level)")
+      .select(
+        "total_quantity, master_materials(id,name, unit, min_stock_level)"
+      )
       .eq("master_material_id", material_id)
       .single();
 
@@ -52,6 +61,8 @@ export async function POST(request) {
           requested_quantity,
           requested_by,
           request_reason,
+          project_id,
+          project_name,
           status: "pending",
         },
       ])
@@ -59,6 +70,7 @@ export async function POST(request) {
         `
         *,
         master_materials (
+        id,
           name,
           unit,
           category
@@ -99,6 +111,7 @@ export async function GET(request) {
         `
         *,
         master_materials (
+        id,
           name,
           unit,
           category,

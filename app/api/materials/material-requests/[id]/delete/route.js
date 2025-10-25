@@ -2,7 +2,7 @@
 import { supabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 
-export async function POST(request, { params }) {
+export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();

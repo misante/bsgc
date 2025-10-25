@@ -51,6 +51,7 @@ const CreateProcurementOrderModal = ({
         total_cost: materialRequirement.total_cost || 0,
         expected_delivery: materialRequirement.required_date || "",
         project_phase: materialRequirement.project_phase || "",
+        project_id: materialRequirement.project_id || null,
         supplier_id: "",
         supplier_name: "",
         notes: "",
@@ -117,6 +118,7 @@ const CreateProcurementOrderModal = ({
         total_cost: parseFloat(formData.total_cost) || 0,
         expected_delivery: formData.expected_delivery,
         project_phase: formData.project_phase,
+        project_id: materialRequirement.project_id,
         notes: formData.notes,
         priority: formData.priority,
       };
@@ -171,7 +173,7 @@ const CreateProcurementOrderModal = ({
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Material Information Display */}
               {materialRequirement && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="dark:bg-gray-800 dark:shadow-gray-900 dark:border-t-4 dark:border-gray-900 dark:shadow-xl shadow-md shadow-blue-500 p-4 rounded-lg border border-blue-200">
                   <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
                     <Package className="w-4 h-4" />
                     Selected Material Requirement
@@ -181,7 +183,7 @@ const CreateProcurementOrderModal = ({
                       <span className="text-blue-700 dark:text-blue-300 block text-xs font-medium">
                         Material:
                       </span>
-                      <p className="font-medium capitalize">
+                      <p className="font-medium capitalize dark:text-gray-600">
                         {materialRequirement.master_materials?.name ||
                           materialRequirement.material_name ||
                           "Unknown"}
@@ -191,7 +193,7 @@ const CreateProcurementOrderModal = ({
                       <span className="text-blue-700 dark:text-blue-300 block text-xs font-medium">
                         Project:
                       </span>
-                      <p className="font-medium">
+                      <p className="font-medium dark:text-gray-600">
                         {materialRequirement.project_id || "—"}
                       </p>
                     </div>
@@ -199,7 +201,7 @@ const CreateProcurementOrderModal = ({
                       <span className="text-blue-700 dark:text-blue-300 block text-xs font-medium">
                         Phase:
                       </span>
-                      <p className="font-medium capitalize">
+                      <p className="font-medium capitalize dark:text-gray-600">
                         {materialRequirement.project_phase || "—"}
                       </p>
                     </div>
@@ -207,7 +209,7 @@ const CreateProcurementOrderModal = ({
                       <span className="text-blue-700 dark:text-blue-300 block text-xs font-medium">
                         Required Date:
                       </span>
-                      <p className="font-medium">
+                      <p className="font-medium dark:text-gray-600">
                         {materialRequirement.required_date
                           ? new Date(
                               materialRequirement.required_date
