@@ -126,7 +126,6 @@ export async function DELETE(request, { params }) {
                 const filePath = pathParts.slice(5).join("/");
 
                 if (filePath) {
-                  console.log("filePath:", filePath);
                   const { error: deleteError } = await supabase.storage
                     .from("project-images")
                     .remove([filePath]);

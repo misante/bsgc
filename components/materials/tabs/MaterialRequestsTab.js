@@ -40,32 +40,15 @@ const MaterialRequestsTab = () => {
     search: "",
   });
   const [loadingStates, setLoadingStates] = useState({});
-  console.log("requests:", requests);
   const { manpower, loading: userLoading, error: userError } = useManpower();
 
   useEffect(() => {
-    console.log("🔄 MaterialRequestsTab - masterMaterials:", {
-      data: masterMaterials,
-      length: masterMaterials?.length,
-      loading: materialsLoading,
-    });
-
-    console.log("👤 MaterialRequestsTab - manpower context:", {
-      manpower,
-      userLoading,
-      userError,
-    });
-  }, [masterMaterials, materialsLoading, manpower, userLoading, userError]);
-
-  useEffect(() => {
     if (!materialsLoading && masterMaterials && masterMaterials.length > 0) {
-      console.log("📦 Fetching requests because masterMaterials are available");
       fetchRequests();
     }
   }, [filters, masterMaterials, materialsLoading]);
 
   const fetchRequests = async () => {
-    console.log("🔄 Starting to fetch requests...");
     setLoading(true);
     try {
       const queryParams = new URLSearchParams();
@@ -79,7 +62,6 @@ const MaterialRequestsTab = () => {
       const data = await res.json();
 
       if (data.success) {
-        console.log("✅ Requests fetched successfully:", data.data?.length);
         setRequests(data.data || []);
       } else {
         console.error("❌ Failed to fetch requests:", data.error);

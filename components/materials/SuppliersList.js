@@ -15,10 +15,25 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useState } from "react";
+import EditSupplierModal from "./modals/EditSupplierModal";
 
-const SuppliersList = ({ suppliers, onEdit, onDelete }) => {
+const SuppliersList = ({
+  suppliers,
+  onEdit,
+  onDelete,
+  onEditSupplier,
+  // editingSupplier, // Add this prop
+  // showEditSupplierModal, // Add this prop
+  // setShowEditSupplierModal, // Add this prop
+}) => {
   const [expandedSupplier, setExpandedSupplier] = useState(null);
+  const [showEditSupplierModal, setShowEditSupplierModal] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState(null);
 
+  const handleEditClick = (supplier) => {
+    setEditingSupplier(supplier);
+    setShowEditSupplierModal(true);
+  };
   const getRatingColor = (rating) => {
     if (rating >= 4)
       return "text-green-700 bg-green-100 dark:bg-green-900/30 dark:text-green-300";
@@ -46,6 +61,7 @@ const SuppliersList = ({ suppliers, onEdit, onDelete }) => {
       </div>
     );
   }
+
   return (
     <div className="grid gap-4">
       {suppliers.map((supplier) => (
@@ -121,7 +137,7 @@ const SuppliersList = ({ suppliers, onEdit, onDelete }) => {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => onEdit(supplier)}
+                onClick={() => handleEditClick(supplier)}
                 className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
               >
                 <Edit3 className="w-4 h-4" />
@@ -275,6 +291,19 @@ const SuppliersList = ({ suppliers, onEdit, onDelete }) => {
           </div>
         </motion.div>
       ))}
+
+      {/* Edit Supplier Modal */}
+      {showEditSupplierModal && (
+        <EditSupplierModal
+          isOpen={showEditSupplierModal}
+          onClose={() => {
+            setShowEditSupplierModal(false);
+            setEditingSupplier(null);
+          }}
+          onUpdate={onEditSupplier}
+          supplier={editingSupplier}
+        />
+      )}
     </div>
   );
 };

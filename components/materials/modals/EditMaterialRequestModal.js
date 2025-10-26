@@ -24,7 +24,6 @@ const EditMaterialRequestModal = ({
   const [formData, setFormData] = useState(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
-  // console.log("formData for editing:", formData);
   useEffect(() => {
     setMounted(true);
   }, []);

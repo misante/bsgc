@@ -23,7 +23,6 @@ const MaterialSelectionTable = ({ onMaterialSelect, onClose, isOpen }) => {
   const [projects, setProjects] = useState([]);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  console.log("sselected-material:=>", selectedMaterial);
   // Sample project phases
   const projectPhases = [
     "Foundation",

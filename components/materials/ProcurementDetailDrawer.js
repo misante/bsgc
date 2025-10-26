@@ -50,7 +50,6 @@ const ProcurementDetailDrawer = ({
         throw new Error(result.error || "Failed to send email");
       }
 
-      console.log("Email sent successfully:", result.message);
       toast.success("Order Email sent to the Supplier", { duration: 4000 });
 
       // Close the drawer after successful email send to refresh the data

@@ -54,7 +54,6 @@ export default function TasksPage() {
 
   useEffect(() => {
     if (tasks && projects) {
-      console.log("tasks:", tasks, "projects:", projects);
     }
   }, [tasks, projects]);
 

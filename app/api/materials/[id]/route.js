@@ -1,34 +1,3 @@
-// import { NextResponse } from "next/server";
-// import { supabase } from "@/lib/supabase";
-
-// export async function PATCH(req, { params }) {
-//   const id = await params.id;
-//   try {
-//     const body = await req.json();
-//     const { data, error } = await supabase
-//       .from("materials")
-//       .update({ ...body, updated_at: new Date() })
-//       .eq("id", id)
-//       .select();
-//     if (error) throw error;
-//     return NextResponse.json({ data });
-//   } catch (err) {
-//     console.error("PATCH /materials/[id] error", err);
-//     return NextResponse.json({ error: err.message }, { status: 500 });
-//   }
-// }
-
-// export async function DELETE(req, { params }) {
-//   const id = params.id;
-//   try {
-//     const { error } = await supabase.from("materials").delete().eq("id", id);
-//     if (error) throw error;
-//     return NextResponse.json({ success: true });
-//   } catch (err) {
-//     console.error("DELETE /materials/[id] error", err);
-//     return NextResponse.json({ error: err.message }, { status: 500 });
-//   }
-// }
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 

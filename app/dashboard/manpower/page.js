@@ -68,7 +68,6 @@ export default function ManpowerPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log("🔄 Fetching staff and projects data...");
 
       const [staffResponse, projectsResponse] = await Promise.all([
         fetch("/api/manpower"),
@@ -78,7 +77,6 @@ export default function ManpowerPage() {
       if (staffResponse.ok) {
         const staffData = await staffResponse.json();
         setStaff(staffData);
-        console.log("✅ Staff data loaded:", staffData.length, "records");
       } else {
         console.error("❌ Failed to load staff data");
       }
@@ -86,7 +84,6 @@ export default function ManpowerPage() {
       if (projectsResponse.ok) {
         const projectsData = await projectsResponse.json();
         setProjects(projectsData);
-        console.log("✅ Projects data loaded:", projectsData.length, "records");
       } else {
         console.error("❌ Failed to load projects data");
       }

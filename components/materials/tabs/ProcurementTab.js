@@ -1,54 +1,5 @@
 // components/materials/tabs/ProcurementTab.js
 "use client";
-// import { useState, useEffect } from "react";
-// import { motion } from "framer-motion";
-// import {
-//   FileText,
-//   Plus,
-//   Calculator,
-//   ShoppingCart,
-//   Search,
-//   CheckCircle,
-//   Ban,
-//   CheckSquare,
-//   Truck,
-//   Eye,
-//   Package,
-//   Loader,
-// } from "lucide-react";
-// import CreateProcurementOrderModal from "../modals/CreateProcurementOrderModal";
-// import ReceiveOrderModal from "../modals/ReceiveOrderModal";
-// import ProcurementDetailDrawer from "../ProcurementDetailDrawer";
-// import { FaEnvelope } from "react-icons/fa6";
-// import toast from "react-hot-toast";
-
-// const ProcurementTab = ({
-//   suppliers,
-//   procurementOrders,
-//   plannedMaterials,
-//   onCreateOrder,
-//   onUpdateApproval,
-//   onReceiveOrder,
-// }) => {
-//   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
-//   const [selectedOrder, setSelectedOrder] = useState(null);
-//   const [showReceiveModal, setShowReceiveModal] = useState(false);
-//   const [showDetailDrawer, setShowDetailDrawer] = useState(false);
-//   const [isMobile, setIsMobile] = useState(false);
-//   const [isSending, setIsSending] = useState(false);
-//   const [error, setError] = useState(null);
-
-//   const [loadingStates, setLoadingStates] = useState({});
-//   console.log("procurementOrders:", procurementOrders);
-//   useEffect(() => {
-//     const checkMobile = () => {
-//       setIsMobile(window.innerWidth < 768);
-//     };
-
-//     checkMobile();
-//     window.addEventListener("resize", checkMobile);
-//     return () => window.removeEventListener("resize", checkMobile);
-//   }, []);
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
@@ -89,7 +40,6 @@ const ProcurementTab = ({
   const [loadingStates, setLoadingStates] = useState({});
   const [selectedMaterialForOrder, setSelectedMaterialForOrder] =
     useState(null); // New state
-  console.log("procurement orders", procurementOrders);
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -203,7 +153,6 @@ const ProcurementTab = ({
         throw new Error(result.error || "Failed to send email");
       }
 
-      console.log("Email sent successfully:", result.message);
       await fetchProcurementOrders();
       toast.success("Order Email sent to the Supplier", { duration: 4000 });
     } catch (err) {
@@ -223,7 +172,6 @@ const ProcurementTab = ({
   const handleCreateOrderClick = () => {
     setShowMaterialSelection(true);
   };
-  console.log("selectedMaterialForOrder:", selectedMaterialForOrder);
   const MobileTableView = () => (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div className="overflow-x-auto">

@@ -49,14 +49,6 @@ export async function POST(request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
 
-    console.log("Uploading to Supabase storage...", {
-      bucket: "project-images",
-      path: filePath,
-      size: file.size,
-      type: file.type,
-      projectId: projectId,
-    });
-
     // Upload to Supabase Storage using admin client
     const { data, error } = await supabaseAdmin.storage
       .from("project-images")
@@ -79,8 +71,6 @@ export async function POST(request) {
     const {
       data: { publicUrl },
     } = supabaseAdmin.storage.from("project-images").getPublicUrl(filePath);
-
-    console.log("Upload successful:", publicUrl);
 
     return NextResponse.json({
       secure_url: publicUrl,

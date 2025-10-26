@@ -4,7 +4,6 @@
 export function useTempPermissions() {
   // Grant full access to everything for development
   const can = (module, action) => {
-    console.log(`🔓 TEMP ACCESS: ${module} - ${action} (always true)`);
     return true;
   };
 

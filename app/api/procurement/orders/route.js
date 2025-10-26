@@ -30,7 +30,6 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    console.log("order body:", body);
     // const {
     //   requirement_id,
     //   master_material_id: material_id,
@@ -66,7 +65,6 @@ export async function POST(request) {
       .single();
 
     if (error) {
-      console.log("insert-error:", error);
       return NextResponse.json(error, { status: 500 });
     }
     return NextResponse.json(order, { status: 201 });

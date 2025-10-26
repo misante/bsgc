@@ -26,7 +26,6 @@ export async function DELETE(request, { params }) {
   try {
     const { data, error } = await supabase.from("tasks").delete().eq("id", id);
     if (error) {
-      console.log("delete error:", error);
       return NextResponse.json({ error }, { status: 400 });
     }
     return NextResponse.json({ data });
@@ -72,7 +71,6 @@ export async function PUT(req, { params }) {
     console.error(updateError);
     return Response.json({ error: updateError.message }, { status: 400 });
   }
-  console.log("updatedTask", updatedTask);
   console.log("type-of-progress?", typeof progress);
   // 🧩 Step 2. Recalculate Phase Progress
   if (updatedTask?.phase_id) {

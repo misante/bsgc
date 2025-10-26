@@ -5,8 +5,6 @@ export async function GET(request, { params }) {
   try {
     const { authId } = await params;
 
-    console.log("🔍 Looking up user in Supabase with auth_id:", authId);
-
     const { data, error } = await supabase
       .from("users")
       .select("*")
@@ -30,7 +28,6 @@ export async function GET(request, { params }) {
       );
     }
 
-    console.log("✅ User found in Supabase:", data);
     return NextResponse.json(data);
   } catch (error) {
     console.error("❌ Server error in user API:", error);

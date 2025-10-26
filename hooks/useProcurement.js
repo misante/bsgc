@@ -22,7 +22,6 @@ export function useProcurement() {
 
   const handleCreateProcurement = useCallback(
     async (orderData, updateMaterialStatus) => {
-      console.log("order-data:", orderData);
       try {
         const response = await fetch("/api/procurement/orders", {
           method: "POST",

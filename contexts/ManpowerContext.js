@@ -20,17 +20,13 @@ export function ManpowerProvider({ children }) {
 
   const fetchManpowerFromSupabase = async (firebaseUser) => {
     try {
-      console.log("🔄 Fetching manpower data for auth_id:", firebaseUser.uid);
-
       const response = await fetch(`/api/manpower/user/${firebaseUser.uid}`);
 
       if (response.ok) {
         const userData = await response.json();
-        console.log("✅ Manpower data fetched:", userData);
         setManpower(userData);
         setError(null);
       } else {
-        console.log("❌ Manpower not found in Supabase");
         // Create basic user object from Firebase if not found in Supabase
         const basicUser = {
           id: null,
@@ -66,12 +62,9 @@ export function ManpowerProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("🔥 Firebase auth state changed:", firebaseUser);
-
       if (firebaseUser) {
         await fetchManpowerFromSupabase(firebaseUser);
       } else {
-        console.log("👤 No user authenticated");
         setManpower(null);
         setError(null);
       }

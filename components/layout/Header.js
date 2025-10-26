@@ -18,10 +18,7 @@ import {
   FaSignOutAlt,
   FaCog,
 } from "react-icons/fa";
-import { useUser } from "@/contexts/UserContext";
 import { useAuth } from "@/hooks/useAuth";
-// import AuthModal from "@/components/AuthModal";
-// import UserButton from "@/components/UserButton";
 import AuthModal from "../users/AuthModal";
 import { useManpower } from "@/contexts/ManpowerContext";
 import { useRouter } from "next/navigation";
@@ -32,7 +29,6 @@ export default function Header({ setSidebarOpen }) {
   const { manpower, loading } = useManpower();
   const { logout } = useAuth();
   const router = useRouter();
-  console.log("manpower:", manpower);
   // Initialize dark mode from localStorage or system preference
   useEffect(() => {
     const isDarkMode =

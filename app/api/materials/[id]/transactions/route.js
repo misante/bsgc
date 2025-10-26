@@ -115,8 +115,6 @@ export async function GET(request, { params }) {
   const { id } = await params;
 
   try {
-    console.log("🔍 Fetching transactions for material ID:", id);
-
     // Get procurement transactions (IN) from inventory table
     const { data: procurements, error: procurementError } = await supabase
       .from("inventory")
@@ -138,8 +136,6 @@ export async function GET(request, { params }) {
       throw procurementError;
     }
 
-    console.log("📦 Procurement transactions:", procurements?.length);
-
     // Get request transactions (OUT) from material_requests table
     const { data: requests, error: requestError } = await supabase
       .from("material_requests")
@@ -158,8 +154,6 @@ export async function GET(request, { params }) {
       console.error("Error fetching requests:", requestError);
       throw requestError;
     }
-
-    console.log("📤 Request transactions:", requests?.length);
 
     // Combine and format transactions
     const procurementTransactions =
@@ -208,8 +202,6 @@ export async function GET(request, { params }) {
       ...procurementTransactions,
       ...requestTransactions,
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    // console.log("📊 Total transactions:", procurementTransactions);
 
     const { data: stock, error: stockError } = await supabase
       .from("material_stock")

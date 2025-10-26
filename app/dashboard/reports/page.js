@@ -166,7 +166,7 @@ function ChartCard({ title, data, type }) {
             {type === "bar" ? (
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="name" />
+                <XAxis dataKey="name" className="capitalize" />
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey="value" fill="#2563eb" radius={6} />

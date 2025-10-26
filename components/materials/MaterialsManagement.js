@@ -114,7 +114,6 @@ export default function MaterialsManagement() {
     const approvedMaterials = plannedMaterials.filter(
       (material) => material.status === "approved"
     );
-    console.log("suppliers in mmp:", suppliers);
 
     // Also include materials that have approved procurement orders
     const approvedOrderMaterials = procurementOrders
@@ -250,7 +249,6 @@ export default function MaterialsManagement() {
         );
 
       case "procurement":
-        console.log("suppliers:", suppliers);
         return (
           <ProcurementTab
             suppliers={suppliers}

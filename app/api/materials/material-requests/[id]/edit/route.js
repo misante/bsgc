@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 export async function PUT(request, { params }) {
   try {
     const { id } = await params;
-    console.log("material-id:", id);
     const body = await request.json();
     const { material_id, requested_quantity, project_id, request_reason } =
       body;

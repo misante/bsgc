@@ -4,7 +4,6 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(request, { params }) {
   const { id } = await params;
-  console.log("id:", id);
   const { approved_by, status } = await request.json();
 
   try {

@@ -52,7 +52,6 @@ const DeliveryConfirmationModal = ({
         `/api/materials/inventory/material-stock?master_material_id=${request.material_id}`
       );
       const result = await response.json();
-      console.log("result:", result);
       if (result.success && result.data && result.data.length > 0) {
         setAvailableStock(result.data[0].total_quantity || 0);
       } else {

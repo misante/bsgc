@@ -14,8 +14,6 @@ export async function GET(req) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    console.log("🔍 Looking up manpower with auth_id:", decoded.uid);
-
     // Lookup manpower data based on Firebase UID
     const { data: manpower, error: manpowerError } = await supabase
       .from("manpower")
@@ -25,7 +23,6 @@ export async function GET(req) {
 
     if (manpowerError) {
       if (manpowerError.code === "PGRST116") {
-        console.log("❌ Manpower not found for auth_id:", decoded.uid);
         return NextResponse.json(
           { error: "Manpower not found" },
           { status: 404 }
@@ -39,9 +36,6 @@ export async function GET(req) {
       );
     }
 
-    console.log("✅ Manpower found:", manpower);
-    console.log("🔍 Manpower role:", manpower.role);
-
     // If manpower found, fetch their permissions based on role
     let permissions = [];
     if (manpower && manpower.role) {
@@ -52,13 +46,9 @@ export async function GET(req) {
         .eq("name", manpower.role)
         .single();
 
-      console.log("🔍 Role lookup result:", { roleData, roleError });
-
       if (roleError) {
         console.error("❌ Error fetching role:", roleError);
       } else if (roleData) {
-        console.log("✅ Role found with ID:", roleData.id);
-
         // Now get permissions for this role_id
         const { data: permissionsData, error: permissionsError } =
           await supabase
@@ -66,16 +56,10 @@ export async function GET(req) {
             .select("*")
             .eq("role_id", roleData.id);
 
-        console.log("🔍 Permissions lookup result:", {
-          permissionsCount: permissionsData?.length,
-          permissionsError,
-        });
-
         if (permissionsError) {
           console.error("❌ Error fetching permissions:", permissionsError);
         } else {
           permissions = permissionsData || [];
-          console.log("✅ Permissions found:", permissions.length);
         }
       } else {
         console.log("❌ No role found with name:", manpower.role);
@@ -84,9 +68,6 @@ export async function GET(req) {
 
     // If no permissions found, provide default permissions based on role
     if (permissions.length === 0) {
-      console.log(
-        "⚠️ No permissions found in database, using default permissions"
-      );
       permissions = getDefaultPermissions(manpower.role);
     }
 

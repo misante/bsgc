@@ -5,8 +5,6 @@ export async function GET(request, { params }) {
   try {
     const { authId } = await params;
 
-    console.log("🔍 Looking up manpower with auth_id:", authId);
-
     const { data, error } = await supabase
       .from("manpower")
       .select("*")
@@ -15,7 +13,6 @@ export async function GET(request, { params }) {
 
     if (error) {
       if (error.code === "PGRST116") {
-        console.log("❌ No manpower found for auth_id:", authId);
         return NextResponse.json(
           { error: "User not found in manpower table" },
           { status: 404 }
@@ -26,7 +23,6 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log("✅ Manpower found:", data);
     return NextResponse.json(data);
   } catch (error) {
     console.error("❌ Server error:", error);

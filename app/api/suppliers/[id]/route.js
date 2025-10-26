@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { data: supplier, error } = await supabase
       .from("suppliers")
@@ -31,7 +31,7 @@ export async function GET(request, { params }) {
 
 export async function PATCH(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const updates = await request.json();
 
     const { data: supplier, error } = await supabase
@@ -55,7 +55,7 @@ export async function PATCH(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Soft delete by setting is_active to false
     const { error } = await supabase

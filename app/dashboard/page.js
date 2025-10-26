@@ -206,7 +206,6 @@ export default function Dashboard() {
       setRecentActivity(activity);
       setLastUpdated(new Date().toLocaleString());
 
-      console.log("🎊 Dashboard data loaded successfully!");
       console.groupEnd();
     } catch (error) {
       console.error("💥 Failed to load dashboard data:", error);

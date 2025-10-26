@@ -50,7 +50,6 @@ export async function POST(request) {
           throw updateError;
         }
 
-        console.log(`Email sent successfully to ${data.suppliers.email}`);
         return NextResponse.json(
           { message: "Email sent and order updated successfully" },
           { status: 200 }

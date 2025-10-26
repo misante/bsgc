@@ -36,10 +36,6 @@ const CreateProcurementOrderModal = ({
   // Auto-populate when materialRequirement changes
   useEffect(() => {
     if (materialRequirement) {
-      console.log(
-        "Populating form with material requirement:",
-        materialRequirement
-      );
       setFormData({
         requirement_id: materialRequirement.id,
         material_id: materialRequirement.master_material_id,
@@ -123,7 +119,6 @@ const CreateProcurementOrderModal = ({
         priority: formData.priority,
       };
 
-      console.log("Submitting procurement order:", submitData);
       const success = await onCreateOrder(submitData);
       if (success) {
         onClose();

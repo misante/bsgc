@@ -53,7 +53,6 @@ const ReceiveOrderModal = ({
   useEffect(() => {
     setMounted(true);
   }, []);
-  console.log("order to receive:", order);
   // Reset form and fetch data when modal opens
   useEffect(() => {
     if (isOpen && order) {
@@ -86,7 +85,6 @@ const ReceiveOrderModal = ({
       supplier_name: order.supplier_name,
     });
   };
-  console.log("order recceipt form data:", formData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

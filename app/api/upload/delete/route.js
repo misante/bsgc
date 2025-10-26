@@ -14,10 +14,10 @@ export async function POST(request) {
       );
     }
 
-    console.log("Deleting from Supabase storage...", {
-      bucket: "project-images",
-      path: filePath,
-    });
+    // console.log("Deleting from Supabase storage...", {
+    //   bucket: "project-images",
+    //   path: filePath,
+    // });
 
     // Delete from Supabase Storage
     const { data, error } = await supabaseAdmin.storage
@@ -33,8 +33,6 @@ export async function POST(request) {
         { status: 500 }
       );
     }
-
-    console.log("Delete successful:", filePath);
 
     return NextResponse.json({
       success: true,

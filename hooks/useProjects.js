@@ -24,7 +24,6 @@ export const useProjects = (initialStatus = "all") => {
         }
 
         const data = await response.json();
-        console.log("returned-project-data:", data);
         setProjects(data);
       } catch (err) {
         console.error("Error fetching projects:", err);

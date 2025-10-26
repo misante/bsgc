@@ -23,7 +23,6 @@ const MaterialDetailDrawer = ({
 }) => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  console.log("material in drawe:", material);
   const handleShowHistory = () => {
     setShowHistory(true);
   };
