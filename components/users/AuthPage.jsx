@@ -1,6 +1,5 @@
 "use client";
 
-import { useUser } from "@/contexts/UserContext";
 import { useState, useEffect } from "react";
 import AuthModal from "./AuthModal";
 import { useManpower } from "@/contexts/ManpowerContext";
