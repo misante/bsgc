@@ -9,6 +9,7 @@ import StaffDetailsModal from "./StaffDetailsModal";
 import EditStaffModal from "./EditStaffModal";
 import { useManpower } from "@/contexts/ManpowerContext";
 import toast from "react-hot-toast";
+import ManpowerPlanningModal from "@/components/manpower/ManpowerPlanningModal";
 
 const roles = [
   "Project Manager",
@@ -53,6 +54,8 @@ export default function ManpowerPage() {
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+
   const [modalState, setModalState] = useState({
     type: null,
     staff: null,
@@ -285,15 +288,23 @@ export default function ManpowerPage() {
                 )}
               </motion.p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleAddStaff}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Add Staff Member
-            </motion.button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setOpen(true)}
+                className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700"
+              >
+                Plan Manpower
+              </button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleAddStaff}
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Add Staff Member
+              </motion.button>
+            </div>
           </div>
         </motion.div>
 
@@ -498,6 +509,11 @@ export default function ManpowerPage() {
             getProjectName={getProjectName}
           />
         )}
+        <ManpowerPlanningModal
+          open={open}
+          onClose={() => setOpen(false)}
+          projects={projects}
+        />
       </AnimatePresence>
     </DashboardLayout>
   );

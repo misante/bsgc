@@ -3,6 +3,7 @@ import { useState } from "react";
 import { loginUser, registerUser, logoutUser } from "@/lib/firebase-auth";
 import { useManpower } from "@/contexts/ManpowerContext";
 import { useRouter } from "next/navigation";
+import { Loader } from "lucide-react";
 
 export function useAuth() {
   const [loading, setLoading] = useState(false);
@@ -62,7 +63,12 @@ export function useAuth() {
       await refreshManpower();
 
       // 5. Set success and redirect
-      setSuccess("Login successful! Redirecting to dashboard...");
+      setSuccess(
+        <div className="flex items-center">
+          <p>Login successful! Redirecting to dashboard...</p>
+          <Loader className="h-3 w-3 animate-spin ml-4" />
+        </div>
+      );
 
       // Redirect after short delay to show success message
       setTimeout(() => {
@@ -119,11 +125,16 @@ export function useAuth() {
             "Failed to create company record. Please try again."
         );
       }
-
       // 4. Set success state and redirect
       setSuccess(
-        "Account created successfully! Welcome to BSGC. Redirecting..."
+        <div className="flex items-center">
+          <p>Account created successfully! Welcome to BSGC. Redirecting...</p>
+          <Loader className="h-4 w-4 animate-spin ml-4" />
+        </div>
       );
+      // setSuccess(
+      //   "Account created successfully! Welcome to BSGC. Redirecting..."
+      // );
 
       setTimeout(() => {
         router.replace("/dashboard");
@@ -197,7 +208,13 @@ export function useAuth() {
       await refreshManpower();
 
       // 5. Set success and redirect
-      setSuccess("Google sign in successful! Redirecting...");
+      // setSuccess("Google sign in successful! Redirecting...");
+      setSuccess(
+        <div className="flex items-center">
+          <p>Google sign in successful! Redirecting...</p>
+          <Loader className="h-4 w-4 animate-spin ml-4" />
+        </div>
+      );
 
       // Redirect after short delay to show success message
       setTimeout(() => {
