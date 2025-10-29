@@ -283,7 +283,7 @@ function SummaryCard({ title, value, color, subtitle }) {
   return (
     <motion.div
       whileHover={{ scale: 1.03 }}
-      className="p-5 rounded-xl shadow-sm bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+      className="p-5 shadow-md shadow-blue-400 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
     >
       <div className="flex items-center justify-between">
         <div>
@@ -311,7 +311,7 @@ function CostBreakdownCard({ title, value, plannedValue, icon: Icon, color }) {
   return (
     <motion.div
       whileHover={{ scale: 1.03 }}
-      className="p-5 rounded-xl shadow-sm bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+      className="p-5 rounded-xl shadow-md shadow-blue-400 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
     >
       <div className="flex items-center justify-between">
         <div>
@@ -346,7 +346,7 @@ function KPICard({ title, value, indicator, color }) {
   return (
     <motion.div
       whileHover={{ scale: 1.03 }}
-      className="p-5 rounded-xl shadow-sm bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+      className="p-5 rounded-xl shadow-md shadow-blue-400 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
     >
       <div className="flex items-center justify-between">
         <div>
