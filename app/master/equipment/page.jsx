@@ -130,27 +130,29 @@ export default function MasterEquipmentPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b dark:border-gray-600">
-                    <th className="text-left p-4">Name</th>
-                    <th className="text-left p-4">Type</th>
-                    <th className="text-right p-4">Rate/Hour</th>
-                    <th className="text-right p-4">Maintenance Rate</th>
-                    <th className="text-right p-4">Actions</th>
+                  <tr className="border-b dark:border-gray-600 dark:bg-gray-700">
+                    <th className="text-left py-2 px-4">Name</th>
+                    <th className="text-left py-2 px-4">Type</th>
+                    <th className="text-right py-2 px-4">Rate/Hour</th>
+                    <th className="text-right py-2 px-4">Maintenance Rate</th>
+                    <th className="text-right py-2 px-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {equipment.map((item) => (
                     <tr
                       key={item.id}
-                      className="border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className="border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                     >
-                      <td className="p-4 capitalize">{item.name}</td>
-                      <td className="p-4 capitalize">{item.type}</td>
-                      <td className="p-4 text-right">${item.rate_per_hour}</td>
-                      <td className="p-4 text-right">
+                      <td className="py-2 px-4 capitalize">{item.name}</td>
+                      <td className="py-2 px-4 capitalize">{item.type}</td>
+                      <td className="py-2 px-4 text-right">
+                        ${item.rate_per_hour}
+                      </td>
+                      <td className="py-2 px-4 text-right">
                         ${item.maintenance_rate}
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="py-2 px-4 text-right">
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleEdit(item)}

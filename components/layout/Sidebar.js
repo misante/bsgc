@@ -147,8 +147,8 @@ const navigation = [
   { name: "Reports", href: "/dashboard/reports", icon: "📈" },
 ];
 
-const financialsMenu = {
-  name: "Financials",
+const resourcePlanningMenu = {
+  name: "Resource Planning",
   href: "#",
   icon: "💰",
   items: [
@@ -356,9 +356,9 @@ export default function Sidebar({ open, setOpen }) {
                       </a>
                     ))}
 
-                    {/* Financials Menu */}
+                    {/* Resource Planning Menu */}
                     <div className="pt-4 border-t border-gray-200">
-                      {renderMenuItem(financialsMenu, 0, setOpen)}
+                      {renderMenuItem(resourcePlanningMenu, 0, setOpen)}
                     </div>
                   </div>
                 </nav>

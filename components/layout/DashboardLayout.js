@@ -141,9 +141,9 @@ const navigation = [
   { name: "Reports", href: "/dashboard/reports", icon: "📈" },
 ];
 
-// Financials submenu structure
-const financialsMenu = {
-  name: "Financials",
+// resourcePlanning submenu structure
+const resourcePlanningMenu = {
+  name: "Resource Planning",
   href: "#", // Use "#" to prevent navigation
   icon: "💰",
   items: [
@@ -199,7 +199,7 @@ export default function DashboardLayout({ children }) {
     return expandedMenus[menuName];
   };
 
-  const isFinancialsActive = () => {
+  const isresourcePlanningActive = () => {
     return pathname.startsWith("/master/") || pathname.startsWith("/planning/");
   };
 
@@ -375,9 +375,9 @@ export default function DashboardLayout({ children }) {
                 );
               })}
 
-              {/* Financials Menu */}
+              {/* resourcePlanning Menu */}
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                {renderMenuItem(financialsMenu)}
+                {renderMenuItem(resourcePlanningMenu)}
               </div>
             </nav>
           </div>
