@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaEdit, FaTrash, FaPlus, FaCalendar } from "react-icons/fa";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { createPortal } from "react-dom";
 
 export default function EquipmentPlanningPage() {
   const [requirements, setRequirements] = useState([]);
@@ -231,169 +232,185 @@ export default function EquipmentPlanningPage() {
         </div>
 
         {/* Add/Edit Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-            >
-              <h2 className="text-xl font-bold mb-4">
-                {editingReq
-                  ? "Edit Equipment Requirement"
-                  : "Add Equipment Requirement"}
-              </h2>
+        {showModal &&
+          createPortal(
+            <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              >
+                <h2 className="text-xl font-bold mb-4 dark:text-white">
+                  {editingReq
+                    ? "Edit Equipment Requirement"
+                    : "Add Equipment Requirement"}
+                </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Project
-                    </label>
-                    <select
-                      required
-                      value={formData.project_id}
-                      onChange={(e) =>
-                        setFormData({ ...formData, project_id: e.target.value })
-                      }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Project
+                      </label>
+                      <select
+                        required
+                        value={formData.project_id}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            project_id: e.target.value,
+                          })
+                        }
+                        className="w-full capitalize p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      >
+                        <option value="">Select Project</option>
+                        {projects.map((project) => (
+                          <option
+                            key={project.id}
+                            value={project.id}
+                            className="capitalize"
+                          >
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Equipment
+                      </label>
+                      <select
+                        required
+                        value={formData.equipment_id}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            equipment_id: e.target.value,
+                          })
+                        }
+                        className="w-full capitalize p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      >
+                        <option value="">Select Equipment</option>
+                        {equipment.map((eq) => (
+                          <option
+                            key={eq.id}
+                            value={eq.id}
+                            className="capitalize"
+                          >
+                            {eq.name} - ${eq.rate_per_hour}/hr
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Planned Hours
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={formData.planned_hours}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            planned_hours: e.target.value,
+                          })
+                        }
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      />
+                    </div>
+                    {/* 
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Actual Hours
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.actual_hours}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            actual_hours: e.target.value,
+                          })
+                        }
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      />
+                    </div> */}
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.start_date}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            start_date: e.target.value,
+                          })
+                        }
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.end_date}
+                        onChange={(e) =>
+                          setFormData({ ...formData, end_date: e.target.value })
+                        }
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Status
+                      </label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) =>
+                          setFormData({ ...formData, status: e.target.value })
+                        }
+                        className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      >
+                        <option value="planned">Planned</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 justify-end pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowModal(false);
+                        resetForm();
+                      }}
+                      className="px-4 py-2 border rounded hover:bg-gray-50"
                     >
-                      <option value="">Select Project</option>
-                      {projects.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Equipment
-                    </label>
-                    <select
-                      required
-                      value={formData.equipment_id}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          equipment_id: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                     >
-                      <option value="">Select Equipment</option>
-                      {equipment.map((eq) => (
-                        <option key={eq.id} value={eq.id}>
-                          {eq.name} - ${eq.rate_per_hour}/hr
-                        </option>
-                      ))}
-                    </select>
+                      {editingReq ? "Update" : "Create"}
+                    </button>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Planned Hours
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      value={formData.planned_hours}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          planned_hours: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Actual Hours
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.actual_hours}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          actual_hours: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.start_date}
-                      onChange={(e) =>
-                        setFormData({ ...formData, start_date: e.target.value })
-                      }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.end_date}
-                      onChange={(e) =>
-                        setFormData({ ...formData, end_date: e.target.value })
-                      }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Status
-                    </label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) =>
-                        setFormData({ ...formData, status: e.target.value })
-                      }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                    >
-                      <option value="planned">Planned</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      resetForm();
-                    }}
-                    className="px-4 py-2 border rounded hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    {editingReq ? "Update" : "Create"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
+                </form>
+              </motion.div>
+            </div>,
+            document.body
+          )}
       </div>
     </DashboardLayout>
   );

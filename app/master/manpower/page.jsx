@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaEdit, FaTrash, FaPlus, FaUsers } from "react-icons/fa";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { createPortal } from "react-dom";
 
 export default function MasterManpowerPage() {
   const [manpower, setManpower] = useState([]);
@@ -164,72 +165,76 @@ export default function MasterManpowerPage() {
         </div>
 
         {/* Add/Edit Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md"
-            >
-              <h2 className="text-xl font-bold mb-4">
-                {editingManpower ? "Edit Role" : "Add New Role"}
-              </h2>
+        {showModal &&
+          createPortal(
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md"
+              >
+                <h2 className="text-xl font-bold mb-4 dark:text-white">
+                  {editingManpower ? "Edit Role" : "Add New Role"}
+                </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Role</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.role}
-                    onChange={(e) =>
-                      setFormData({ ...formData, role: e.target.value })
-                    }
-                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                  />
-                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Role
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.role}
+                      onChange={(e) =>
+                        setFormData({ ...formData, role: e.target.value })
+                      }
+                      className="w-full capitalize p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Rate per Hour ($)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={formData.rate_per_hour}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        rate_per_hour: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Rate per Hour ($)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={formData.rate_per_hour}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          rate_per_hour: e.target.value,
+                        })
+                      }
+                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  </div>
 
-                <div className="flex gap-2 justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      resetForm();
-                    }}
-                    className="px-4 py-2 border rounded hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    {editingManpower ? "Update" : "Create"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
+                  <div className="flex gap-2 justify-end pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowModal(false);
+                        resetForm();
+                      }}
+                      className="px-4 dark:hover:text-black dark:border-white py-2 border rounded hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      {editingManpower ? "Update" : "Create"}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>,
+            document.body
+          )}
       </div>
     </DashboardLayout>
   );
