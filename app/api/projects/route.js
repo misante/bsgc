@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { updateProjectProgress } from "@/utils/projects/updateProgress";
-import crypto from "crypto"; // If needed for UUID, but assuming upload API handles uniqueness
+import crypto from "crypto";
 import { Weight } from "lucide-react";
 import { progress } from "framer-motion";
+import { updateProjectProgress } from "@/utils/projects/updateProgress";
 
 // Assume your storage bucket name is 'images' - replace with your actual bucket name
 const BUCKET_NAME = "project-images"; // Change this to your Supabase storage bucket name
@@ -39,7 +39,7 @@ export async function POST(request) {
       description: body.description,
       client: body.client,
       project_manager: body.project_manager,
-      budget: body.budget ? parseFloat(body.budget) : null,
+      // budget: body.budget ? parseFloat(body.budget) : null,
       start_date: body.start_date || null,
       end_date: body.end_date || null,
       status: body.status || "Planning",
@@ -176,7 +176,7 @@ export async function PUT(request) {
       .from("projects")
       .update({
         ...body,
-        budget: body.budget ? parseFloat(body.budget) : null,
+        // budget: body.budget ? parseFloat(body.budget) : null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

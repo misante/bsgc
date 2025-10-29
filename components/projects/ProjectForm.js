@@ -31,7 +31,7 @@ export default function ProjectForm({
     description: "",
     client: "",
     project_manager: "",
-    budget: "",
+    // budget: "",
     start_date: "",
     end_date: "",
     status: "Planning",
@@ -71,7 +71,7 @@ export default function ProjectForm({
         description: project.description || "",
         client: project.client || "",
         project_manager: project.project_manager || "",
-        budget: project.budget || "",
+        // budget: project.budget || "",
         start_date: project.start_date || "",
         end_date: project.end_date || "",
         status: project.status || "Planning",
@@ -89,7 +89,7 @@ export default function ProjectForm({
         description: "",
         client: "",
         project_manager: "",
-        budget: "",
+        // budget: "",
         start_date: "",
         end_date: "",
         status: "Planning",
@@ -343,7 +343,7 @@ export default function ProjectForm({
         description: "",
         client: "",
         project_manager: "",
-        budget: "",
+        // budget: "",
         start_date: "",
         end_date: "",
         status: "Planning",
@@ -472,7 +472,7 @@ export default function ProjectForm({
                         </div>
 
                         {/* Budget */}
-                        <div>
+                        {/* <div>
                           <label
                             htmlFor="budget"
                             className="block text-sm font-semibold text-gray-900 mb-2"
@@ -489,7 +489,7 @@ export default function ProjectForm({
                             className="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                             placeholder="Enter budget amount"
                           />
-                        </div>
+                        </div> */}
 
                         {/* Start Date */}
                         <div>

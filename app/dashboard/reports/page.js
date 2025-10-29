@@ -366,6 +366,15 @@ function KPICard({ title, value, indicator, color }) {
 
 // ChartCard and EquipmentEfficiencyTable components remain the same as before
 function ChartCard({ title, data, type, dualAxis = false, dataKey = "value" }) {
+  // Check if data has meaningful values (not all zeros or empty)
+  const hasValidData = data?.some((item) => {
+    if (dualAxis) {
+      const hasData = item.planned > 0 || item.actual > 0;
+      return hasData;
+    }
+    return item[dataKey] > 0;
+  });
+
   // Custom tooltip formatter based on chart type
   const getTooltipFormatter = () => {
     if (type === "pie") {
@@ -400,12 +409,49 @@ function ChartCard({ title, data, type, dualAxis = false, dataKey = "value" }) {
     return "Value";
   };
 
+  // Optimized XAxis tick component for better space usage
+  const CustomizedXAxisTick = ({ x, y, payload }) => {
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={0}
+          dy={16}
+          textAnchor="end"
+          fill="#6B7280"
+          fontSize={11} // Slightly smaller font
+          transform="rotate(-35)" // Less rotation for better space usage
+          className="capitalize font-medium"
+        >
+          {payload.value}
+        </text>
+      </g>
+    );
+  };
+
+  // Capitalize project names for display
+  const capitalizedData = data?.map((item) => ({
+    ...item,
+    name: item.name
+      ? item.name
+          .split(" ")
+          .map(
+            (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          )
+          .join(" ")
+      : item.name,
+  }));
+
   // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const dataItem = payload[0]?.payload; // Get the full data item
+
       return (
         <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900 dark:text-white">{label}</p>
+          <p className="font-medium text-gray-900 dark:text-white">
+            {dataItem?.fullName || label}
+          </p>
           {payload.map((entry, index) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}:{" "}
@@ -419,24 +465,54 @@ function ChartCard({ title, data, type, dualAxis = false, dataKey = "value" }) {
                 : entry.value}
             </p>
           ))}
+          {/* Show progress in tooltip for Planned vs Actual chart */}
+          {dataItem?.progress !== undefined && (
+            <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
+              Progress: {dataItem.progress}%
+            </p>
+          )}
+          {/* Show budget if available */}
+          {dataItem?.budget !== undefined && dataItem.budget > 0 && (
+            <p className="text-sm text-purple-600 dark:text-purple-400">
+              Budget: ${dataItem.budget.toLocaleString()}
+            </p>
+          )}
         </div>
       );
     }
     return null;
   };
 
+  // Optimized margins based on chart type
+  const getChartMargin = () => {
+    if (type === "bar" && dualAxis) {
+      return { bottom: 20, right: 10, left: 10, top: 10 }; // Reduced margins
+    }
+    if (type === "bar") {
+      return { bottom: 20, right: 10, left: 10, top: 10 };
+    }
+    if (type === "line") {
+      return { bottom: 10, right: 10, left: 10, top: 10 };
+    }
+    return { bottom: 10, right: 10, left: 10, top: 10 };
+  };
+
+  const chartMargin = getChartMargin();
+
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         {title}
       </h2>
-      {data?.length > 0 ? (
-        <div className="h-64">
+      {data?.length > 0 && hasValidData ? (
+        <div className="h-72">
+          {" "}
+          {/* Increased height for better visualization */}
           <ResponsiveContainer width="100%" height="100%">
             {type === "pie" ? (
               <PieChart>
                 <Pie
-                  data={data}
+                  data={capitalizedData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -447,7 +523,7 @@ function ChartCard({ title, data, type, dualAxis = false, dataKey = "value" }) {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {data.map((entry, index) => (
+                  {capitalizedData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={entry.color || COLORS[index % COLORS.length]}
@@ -459,47 +535,67 @@ function ChartCard({ title, data, type, dualAxis = false, dataKey = "value" }) {
                 />
               </PieChart>
             ) : type === "bar" && dualAxis ? (
-              <BarChart data={data}>
+              <BarChart data={capitalizedData} margin={chartMargin}>
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis
+                  dataKey="name"
+                  interval={0}
+                  tick={<CustomizedXAxisTick />}
+                  height={50} // Reduced height for better space usage
+                />
+                <YAxis width={40} /> {/* Reduced YAxis width */}
                 <Tooltip content={<CustomTooltip />} />
                 <Bar
                   dataKey="planned"
                   fill="#4f46e5"
                   name="Planned Cost"
-                  radius={6}
+                  radius={4}
                 />
                 <Bar
                   dataKey="actual"
                   fill="#10b981"
                   name="Actual Cost"
-                  radius={6}
+                  radius={4}
                 />
               </BarChart>
             ) : type === "bar" && title.includes("Utilization") ? (
-              <BarChart data={data}>
+              <BarChart data={capitalizedData} margin={chartMargin}>
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis
+                  dataKey="name"
+                  interval={0}
+                  tick={<CustomizedXAxisTick />}
+                  height={50}
+                />
+                <YAxis width={40} />
                 <Tooltip
                   formatter={(value) => [`${value}%`, "Utilization Rate"]}
                 />
-                <Bar dataKey={dataKey} fill="#2563eb" radius={6} />
+                <Bar dataKey={dataKey} fill="#2563eb" radius={4} />
               </BarChart>
             ) : type === "bar" ? (
-              <BarChart data={data}>
+              <BarChart data={capitalizedData} margin={chartMargin}>
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis
+                  dataKey="name"
+                  interval={0}
+                  tick={<CustomizedXAxisTick />}
+                  height={50}
+                />
+                <YAxis width={40} />
                 <Tooltip formatter={(value) => [`${value}`, getYAxisLabel()]} />
-                <Bar dataKey={dataKey} fill="#2563eb" radius={6} />
+                <Bar dataKey={dataKey} fill="#2563eb" radius={4} />
               </BarChart>
             ) : type === "line" && title.includes("Cost") ? (
-              <LineChart data={data}>
+              <LineChart data={capitalizedData} margin={chartMargin}>
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis
+                  dataKey="name"
+                  interval={0}
+                  tick={<CustomizedXAxisTick />}
+                  height={40}
+                />
+                <YAxis width={40} />
                 <Tooltip
                   formatter={(value) => [
                     `$${value.toLocaleString()}`,
@@ -510,29 +606,44 @@ function ChartCard({ title, data, type, dualAxis = false, dataKey = "value" }) {
                   type="monotone"
                   dataKey="value"
                   stroke="#dc2626"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
                 />
               </LineChart>
             ) : (
-              <LineChart data={data}>
+              <LineChart data={capitalizedData} margin={chartMargin}>
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis
+                  dataKey="name"
+                  interval={0}
+                  tick={<CustomizedXAxisTick />}
+                  height={40}
+                />
+                <YAxis width={40} />
                 <Tooltip formatter={(value) => [`${value}`, getYAxisLabel()]} />
                 <Line
                   type="monotone"
                   dataKey="value"
                   stroke="#dc2626"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
                 />
               </LineChart>
             )}
           </ResponsiveContainer>
         </div>
       ) : (
-        <p className="text-gray-500 text-sm italic">No data available.</p>
+        <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+          <p className="text-sm italic mb-2">No data available for: {title}</p>
+          <p className="text-xs text-gray-400 text-center">
+            {data?.length > 0
+              ? "Data exists but all values are zero"
+              : "No data returned from API"}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Data points: {data?.length || 0}
+          </p>
+        </div>
       )}
     </div>
   );
