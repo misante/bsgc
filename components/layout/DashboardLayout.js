@@ -129,6 +129,8 @@ import {
   FaUserClock,
   FaDollarSign,
 } from "react-icons/fa";
+import { FaChartBar } from "react-icons/fa6";
+import { Package } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: "📊" },
@@ -151,14 +153,25 @@ const resourcePlanningMenu = {
       name: "Masters",
       icon: FaCog,
       items: [
+        { name: "Materials", href: "/dashboard/materials", icon: Package },
         { name: "Equipment", href: "/master/equipment", icon: FaTools },
         { name: "Manpower", href: "/master/manpower", icon: FaUsers },
+        {
+          name: "Indirect Costs",
+          href: "/master/indirect-costs",
+          icon: FaDollarSign,
+        },
       ],
     },
     {
       name: "Planning",
       icon: FaUserClock,
       items: [
+        {
+          name: "Materials Planning",
+          href: "/dashboard/materials",
+          icon: Package,
+        },
         {
           name: "Equipment Planning",
           href: "/planning/equipment",
@@ -168,6 +181,22 @@ const resourcePlanningMenu = {
           name: "Manpower Planning",
           href: "/planning/manpower",
           icon: FaUserClock,
+        },
+        {
+          name: "Indirect Cost Planning",
+          href: "/planning/indirect-costs",
+          icon: FaDollarSign,
+        },
+      ],
+    },
+    {
+      name: "Usage",
+      icon: FaChartBar,
+      items: [
+        {
+          name: "Indirect Cost Usage",
+          href: "/usage/indirect-costs",
+          icon: FaDollarSign,
         },
       ],
     },

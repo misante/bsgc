@@ -15,7 +15,6 @@ export default function ManpowerPlanningPage() {
     project_id: "",
     manpower_id: "",
     planned_hours: "",
-    actual_hours: "",
     start_date: "",
     end_date: "",
     status: "planned",
@@ -61,7 +60,6 @@ export default function ManpowerPlanningPage() {
         body: JSON.stringify({
           ...formData,
           planned_hours: parseInt(formData.planned_hours),
-          actual_hours: parseInt(formData.actual_hours) || 0,
         }),
       });
 
@@ -81,7 +79,6 @@ export default function ManpowerPlanningPage() {
       project_id: "",
       manpower_id: "",
       planned_hours: "",
-      actual_hours: "",
       start_date: "",
       end_date: "",
       status: "planned",
@@ -133,13 +130,13 @@ export default function ManpowerPlanningPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b dark:border-gray-600">
-                    <th className="text-left p-4">Project</th>
-                    <th className="text-left p-4">Role</th>
-                    <th className="text-right p-4">Planned Hours</th>
-                    <th className="text-right p-4">Actual Hours</th>
-                    <th className="text-left p-4">Status</th>
-                    <th className="text-right p-4">Actions</th>
+                  <tr className="border-b dark:border-gray-600  dark:bg-gray-700">
+                    <th className="text-left p-3">Project</th>
+                    <th className="text-left p-3">Role</th>
+                    <th className="text-right p-3">Planned Hours</th>
+                    <th className="text-right p-3">Actual Hours</th>
+                    <th className="text-left p-3">Status</th>
+                    <th className="text-right p-3">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -231,7 +228,7 @@ export default function ManpowerPlanningPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             >
-              <h2 className="text-xl font-bold mb-4">
+              <h2 className="text-xl font-bold mb-4 dark:text-white">
                 {editingReq
                   ? "Edit Manpower Requirement"
                   : "Add Manpower Requirement"}
@@ -249,11 +246,15 @@ export default function ManpowerPlanningPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, project_id: e.target.value })
                       }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      className="w-full capitalize p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
                     >
                       <option value="">Select Project</option>
                       {projects.map((project) => (
-                        <option key={project.id} value={project.id}>
+                        <option
+                          key={project.id}
+                          value={project.id}
+                          className="capitalize"
+                        >
                           {project.name}
                         </option>
                       ))}
@@ -273,11 +274,15 @@ export default function ManpowerPlanningPage() {
                           manpower_id: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      className="w-full capitalize p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
                     >
                       <option value="">Select Role</option>
                       {manpower.map((mp) => (
-                        <option key={mp.id} value={mp.id}>
+                        <option
+                          key={mp.id}
+                          value={mp.id}
+                          className="capitalize"
+                        >
                           {mp.role} - ${mp.rate_per_hour}/hr
                         </option>
                       ))}
@@ -301,24 +306,6 @@ export default function ManpowerPlanningPage() {
                       className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Actual Hours
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.actual_hours}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          actual_hours: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                    />
-                  </div>
-
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       Start Date
@@ -346,7 +333,6 @@ export default function ManpowerPlanningPage() {
                       className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
                     />
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       Status
@@ -372,7 +358,7 @@ export default function ManpowerPlanningPage() {
                       setShowModal(false);
                       resetForm();
                     }}
-                    className="px-4 py-2 border rounded hover:bg-gray-50"
+                    className="px-4 dark:hover:text-black py-2 border rounded hover:bg-gray-50"
                   >
                     Cancel
                   </button>

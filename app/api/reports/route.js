@@ -12,26 +12,34 @@ export async function GET(request) {
       { data: manpowerReqs },
       { data: materialReqs },
       { data: equipmentReqs },
+      { data: indirectCostReqs },
       { data: masterMaterials },
       { data: masterManpower },
       { data: masterEquipment },
-      // NEW: Get daily usage data from separate tables
+      { data: masterIndirectCosts },
       { data: dailyMaterialUsage },
       { data: dailyManpowerUsage },
       { data: dailyEquipmentUsage },
+      { data: dailyIndirectCostUsage },
     ] = await Promise.all([
       supabase.from("projects").select("*"),
       supabase.from("manpower_requirements").select("*, master_manpower(*)"),
-      // UPDATED: Correct table name with hyphen
       supabase.from("material-requirements").select("*, master_materials(*)"),
       supabase.from("equipment_requirements").select("*, master_equipment(*)"),
+      // ADDED: Indirect cost requirements
+      supabase
+        .from("indirect_cost_requirements")
+        .select("*, master_indirect_costs(*)"),
       supabase.from("master_materials").select("*"),
       supabase.from("master_manpower").select("*"),
       supabase.from("master_equipment").select("*"),
-      // Daily usage tables
+      supabase.from("master_indirect_costs").select("*"),
       supabase.from("daily_material_usage").select("*, master_materials(*)"),
       supabase.from("daily_manpower_usage").select("*, master_manpower(*)"),
       supabase.from("daily_equipment_usage").select("*, master_equipment(*)"),
+      supabase
+        .from("daily_indirect_cost_usage")
+        .select("*, master_indirect_costs(*)"),
     ]);
 
     // DEBUG: Log the data we're getting
@@ -65,9 +73,18 @@ export async function GET(request) {
         return sum + rate * hours + maintenance;
       }, 0) || 0;
 
-    const totalPlannedCost =
-      plannedMaterialCost + plannedManpowerCost + plannedEquipmentCost;
+    const plannedIndirectCost =
+      indirectCostReqs?.reduce((sum, req) => {
+        const rate = req.master_indirect_costs?.rate_per_unit || 0;
+        const quantity = req.planned_quantity || 0;
+        return sum + rate * quantity;
+      }, 0) || 0;
 
+    const totalPlannedCost =
+      plannedMaterialCost +
+      plannedManpowerCost +
+      plannedEquipmentCost +
+      plannedIndirectCost;
     // Calculate ACTUAL Costs from daily usage tables
     const actualMaterialCost =
       dailyMaterialUsage?.reduce((sum, usage) => {
@@ -89,10 +106,19 @@ export async function GET(request) {
       }, 0) || 0;
 
     // const totalActualCost =
-    //   actualMaterialCost + actualManpowerCost + actualEquipmentCost;
+    const actualIndirectCost =
+      dailyIndirectCostUsage?.reduce((sum, usage) => {
+        const rate = usage.master_indirect_costs?.rate_per_unit || 0;
+        const quantity = usage.quantity_used || 0;
+        return sum + rate * quantity;
+      }, 0) || 0;
+
     const totalActualCost =
-      projects?.reduce((sum, project) => sum + (project.actual_cost || 0), 0) ||
-      0;
+      actualMaterialCost +
+      actualManpowerCost +
+      actualEquipmentCost +
+      actualIndirectCost;
+
     const costVariance = totalPlannedCost - totalActualCost;
 
     // Calculate total budget from projects table
@@ -167,6 +193,12 @@ export async function GET(request) {
         actual: actualEquipmentCost,
         color: "#f59e0b",
       },
+      {
+        name: "Indirect Costs",
+        planned: plannedIndirectCost,
+        actual: actualIndirectCost,
+        color: "#8b5cf6",
+      },
     ];
 
     const monthlyCosts = calculateMonthlyCosts(
@@ -228,63 +260,6 @@ export async function GET(request) {
     );
   }
 }
-
-// UPDATED: Show ALL projects, not just ones with costs > 0
-// function calculateBudgetVsActual(
-//   projects,
-//   materialReqs,
-//   manpowerReqs,
-//   equipmentReqs,
-//   dailyMaterialUsage,
-//   dailyManpowerUsage,
-//   dailyEquipmentUsage
-// ) {
-//   if (!projects || !projects.length) {
-//     console.log("No projects found");
-//     return [];
-//   }
-
-//   const result = projects.map((project) => {
-//     const projectId = project.id;
-
-//     const projectPlannedCost = calculateProjectPlannedCost(
-//       projectId,
-//       materialReqs,
-//       manpowerReqs,
-//       equipmentReqs
-//     );
-
-//     const projectActualCost = calculateProjectActualCost(
-//       projectId,
-//       dailyMaterialUsage,
-//       dailyManpowerUsage,
-//       dailyEquipmentUsage
-//     );
-
-//     console.log(`Project ${project.name} (${projectId}):`, {
-//       planned: projectPlannedCost,
-//       actual: projectActualCost,
-//       progress: project.progress,
-//       budget: project.budget,
-//     });
-
-//     return {
-//       name:
-//         project.name?.substring(0, 10) ||
-//         `Project ${projectId.substring(0, 8)}`,
-//       planned: projectPlannedCost,
-//       actual: projectActualCost,
-//       progress: project.progress || 0,
-//       // Include full project name for tooltip
-//       fullName: project.name,
-//       // Include budget for reference
-//       budget: project.budget || 0,
-//     };
-//   });
-
-//   console.log("Final budget vs actual result - ALL PROJECTS:", result);
-//   return result;
-// }
 
 function calculateBudgetVsActual(projects) {
   if (!projects || !projects.length) return [];

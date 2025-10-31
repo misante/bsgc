@@ -19,6 +19,7 @@ export async function POST(request) {
         { data: materialReqs },
         { data: manpowerReqs },
         { data: equipmentReqs },
+        { data: indirectCostReqs },
       ] = await Promise.all([
         supabase
           .from("material-requirements")
@@ -32,6 +33,10 @@ export async function POST(request) {
           .from("equipment_requirements")
           .select("*, master_equipment(*)")
           .eq("project_id", project.id),
+        supabase
+          .from("indirect_cost_requirements")
+          .select("*, master_indirect_costs(*)")
+          .eq("project_id", project.id),
       ]);
 
       // Calculate actual costs (for actual_cost)
@@ -39,6 +44,7 @@ export async function POST(request) {
         { data: dailyMaterialUsage },
         { data: dailyManpowerUsage },
         { data: dailyEquipmentUsage },
+        { data: dailyIndirectCostUsage },
       ] = await Promise.all([
         supabase
           .from("daily_material_usage")
@@ -51,6 +57,10 @@ export async function POST(request) {
         supabase
           .from("daily_equipment_usage")
           .select("*, master_equipment(*)")
+          .eq("project_id", project.id),
+        supabase
+          .from("daily_indirect_cost_usage")
+          .select("*, master_indirect_costs(*)")
           .eq("project_id", project.id),
       ]);
 
@@ -80,9 +90,18 @@ export async function POST(request) {
             (req.master_equipment?.maintenance_rate || 0),
           0
         ) || 0;
+      const plannedIndirectCost =
+        indirectCostReqs?.reduce((sum, req) => {
+          const rate = req.master_indirect_costs?.rate_per_unit || 0;
+          const quantity = req.planned_quantity || 0;
+          return sum + rate * quantity;
+        }, 0) || 0;
 
       const totalPlannedCost =
-        materialPlannedCost + manpowerPlannedCost + equipmentPlannedCost;
+        materialPlannedCost +
+        manpowerPlannedCost +
+        equipmentPlannedCost +
+        plannedIndirectCost;
 
       // Calculate total actual cost
       const materialActualCost =
@@ -112,9 +131,18 @@ export async function POST(request) {
             (usage.master_equipment?.maintenance_rate || 0),
           0
         ) || 0;
+      const actualIndirectCost =
+        dailyIndirectCostUsage?.reduce((sum, usage) => {
+          const rate = usage.master_indirect_costs?.rate_per_unit || 0;
+          const quantity = usage.quantity_used || 0;
+          return sum + rate * quantity;
+        }, 0) || 0;
 
       const totalActualCost =
-        materialActualCost + manpowerActualCost + equipmentActualCost;
+        materialActualCost +
+        manpowerActualCost +
+        equipmentActualCost +
+        actualIndirectCost;
 
       // Update project financials
       const { error: updateError } = await supabase

@@ -19,6 +19,7 @@ export async function POST(request) {
         { data: materialReqs },
         { data: manpowerReqs },
         { data: equipmentReqs },
+        { data: indirectCostReqs },
       ] = await Promise.all([
         supabase
           .from("material-requirements")
@@ -31,6 +32,10 @@ export async function POST(request) {
         supabase
           .from("equipment_requirements")
           .select("*, master_equipment(*)")
+          .eq("project_id", project.id),
+        supabase
+          .from("indirect_cost_requirements")
+          .select("*, master_indirect_costs(*)")
           .eq("project_id", project.id),
       ]);
 
@@ -60,8 +65,15 @@ export async function POST(request) {
             (req.master_equipment?.maintenance_rate || 0),
           0
         ) || 0;
+      const indirectCost =
+        indirectCostReqs?.reduce((sum, req) => {
+          const rate = req.master_indirect_costs?.rate_per_unit || 0;
+          const quantity = req.planned_quantity || 0;
+          return sum + rate * quantity;
+        }, 0) || 0;
 
-      const totalPlannedCost = materialCost + manpowerCost + equipmentCost;
+      const totalPlannedCost =
+        materialCost + manpowerCost + equipmentCost + indirectCost;
 
       // Update project budget
       const { error: updateError } = await supabase

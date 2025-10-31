@@ -31,9 +31,11 @@ export async function GET(request, { params }) {
       { data: materialReqs },
       { data: manpowerReqs },
       { data: equipmentReqs },
+      { data: indirectCostReqs },
       { data: dailyMaterialUsage },
       { data: dailyManpowerUsage },
       { data: dailyEquipmentUsage },
+      { data: dailyIndirectCostUsage },
     ] = await Promise.all([
       supabase
         .from("material-requirements")
@@ -48,6 +50,10 @@ export async function GET(request, { params }) {
         .select("*, master_equipment(*)")
         .eq("project_id", projectId),
       supabase
+        .from("indirect_cost_requirements")
+        .select("*, master_indirect_costs(*)")
+        .eq("project_id", projectId),
+      supabase
         .from("daily_material_usage")
         .select("*, master_materials(*)")
         .eq("project_id", projectId),
@@ -58,6 +64,10 @@ export async function GET(request, { params }) {
       supabase
         .from("daily_equipment_usage")
         .select("*, master_equipment(*)")
+        .eq("project_id", projectId),
+      supabase
+        .from("daily_indirect_cost_usage")
+        .select("*, master_indirect_costs(*)")
         .eq("project_id", projectId),
     ]);
 
@@ -84,6 +94,14 @@ export async function GET(request, { params }) {
             (req.master_equipment?.rate_per_hour || 0) *
               (req.planned_hours || 0) +
             (req.master_equipment?.maintenance_rate || 0),
+          0
+        ) || 0,
+      indirect:
+        indirectCostReqs?.reduce(
+          (sum, req) =>
+            sum +
+            (req.master_indirect_costs?.rate_per_unit || 0) *
+              (req.planned_quantity || 0),
           0
         ) || 0,
     };
@@ -115,6 +133,14 @@ export async function GET(request, { params }) {
             (usage.master_equipment?.maintenance_rate || 0),
           0
         ) || 0,
+      indirect:
+        dailyIndirectCostUsage?.reduce(
+          (sum, usage) =>
+            sum +
+            (usage.master_indirect_costs?.rate_per_unit || 0) *
+              (usage.quantity_used || 0),
+          0
+        ) || 0,
     };
 
     return NextResponse.json({
@@ -140,9 +166,11 @@ export async function GET(request, { params }) {
           materialRequirements: materialReqs?.length || 0,
           manpowerRequirements: manpowerReqs?.length || 0,
           equipmentRequirements: equipmentReqs?.length || 0,
+          indirectCostRequirements: indirectCostReqs?.length || 0,
           materialUsageEntries: dailyMaterialUsage?.length || 0,
           manpowerUsageEntries: dailyManpowerUsage?.length || 0,
           equipmentUsageEntries: dailyEquipmentUsage?.length || 0,
+          dailyIndirectCostUsageEntries: dailyIndirectCostUsage?.length || 0,
         },
       },
     });
